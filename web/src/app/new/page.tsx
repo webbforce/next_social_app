@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLink } from "@/components/brand";
 import { PlanForm } from "./plan-form";
 
 export const metadata: Metadata = { title: "Make a plan" };
@@ -20,6 +21,7 @@ export default async function NewPlanPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 py-10">
+      <BrandLink />
       <h1 className="text-3xl font-bold tracking-tight">What are you up for?</h1>
       <PlanForm />
     </main>

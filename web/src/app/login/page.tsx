@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser, safeNextPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLink } from "@/components/brand";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -27,6 +28,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
 
   return (
     <main className="flex flex-1 flex-col gap-6 py-12">
+      <BrandLink />
       <LoginForm
         next={next}
         campuses={campuses ?? []}

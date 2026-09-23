@@ -1,0 +1,133 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { BrandLink } from "@/components/brand";
+import { getCurrentUser } from "@/lib/auth";
+import { statsLine } from "@/lib/episode";
+import { getPlanBySlug, getPlanEpisode, getPlanMoments } from "@/lib/plan";
+import { createClient } from "@/lib/supabase/server";
+import { ExcludeGrid } from "./exclude-grid";
+import { MakeEpisodeButton } from "./make-button";
+import { ShareEpisode } from "./share-episode";
+import { StartPlanCta } from "./start-plan-cta";
+import { EpisodeViewTracker } from "./view-tracker";
+
+export async function generateMetadata(props: PageProps<"/p/[slug]/episode">): Promise<Metadata> {
+  const { slug } = await props.params;
+  const plan = await getPlanBySlug(slug);
+  if (!plan) return { title: "Episode not found" };
+  return { title: `${plan.host.first_name} was up for ${plan.activity}`, robots: { index: false } };
+}
+
+export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">) {
+  const { slug } = await props.params;
+  const plan = await getPlanBySlug(slug);
+  if (!plan) notFound();
+
+  const user = await getCurrentUser();
+  const isInsider = plan.is_host || plan.my_rsvp === "in" || plan.my_rsvp === "maybe";
+  if (!user || !isInsider) redirect(`/p/${slug}`);
+
+  const supabase = await createClient();
+  const [episode, moments] = await Promise.all([getPlanEpisode(plan.id), getPlanMoments(plan.id)]);
+
+  const [{ data: myExclusions }, { data: allExclusions }] = await Promise.all([
+    supabase.from("moment_exclusions").select("moment_id").eq("user_id", user.id),
+    moments.length
+      ? supabase
+          .from("moment_exclusions")
+          .select("moment_id")
+          .in(
+            "moment_id",
+            moments.map((m) => m.id),
+          )
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const namedMoments = moments.map((m) => ({
+    ...m,
+    uploaderName:
+      m.uploaderId === plan.host.id
+        ? plan.host.first_name
+        : (plan.participants.find((p) => p.user_id === m.uploaderId)?.first_name ?? m.uploaderName),
+  }));
+
+  const excludedAny = new Set((allExclusions ?? []).map((e) => e.moment_id));
+  const usableCount = moments.filter((m) => !excludedAny.has(m.id)).length;
+  const stale = episode?.status === "ready" && episode.highlights.photos !== usableCount;
+
+  const { data: signed } =
+    episode?.card_path && episode.status === "ready"
+      ? await supabase.storage.from("episodes").createSignedUrl(episode.card_path, 3600)
+      : { data: null };
+
+  const headline = `${plan.host.first_name} was up for ${plan.activity}`;
+
+  return (
+    <main className="flex flex-1 flex-col gap-5 py-6">
+      {episode?.status === "ready" && <EpisodeViewTracker episodeId={episode.id} />}
+      <BrandLink />
+      <Link href={`/p/${slug}`} className="text-sm text-stone-600 underline">
+        Back to the plan
+      </Link>
+
+      <header className="flex flex-col gap-2">
+        <p className="text-stone-600">{plan.host.first_name} was up for</p>
+        <h1 className="text-4xl font-bold tracking-tight">{plan.activity}</h1>
+        {episode?.status === "ready" && <p className="text-stone-600">{statsLine(episode.highlights)}</p>}
+      </header>
+
+      {episode?.status === "ready" && signed?.signedUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={signed.signedUrl}
+          alt={headline}
+          className="w-full rounded-3xl border border-stone-200"
+        />
+      )}
+
+      {episode?.status === "failed" && (
+        <p className="card text-red-700">The last episode didn&apos;t finish. Try making it again.</p>
+      )}
+
+      {episode?.status === "rendering" && <p className="card text-stone-600">Making the episode…</p>}
+
+      {!episode && moments.length === 0 && (
+        <p className="card text-stone-600">Add photos on the plan page, then come back to make the episode.</p>
+      )}
+
+      {stale && <p className="text-sm text-stone-600">Photos changed. The host can update the episode.</p>}
+
+      {plan.is_host && usableCount > 0 && (
+        <MakeEpisodeButton
+          slug={slug}
+          label={episode?.status === "ready" ? "Update episode" : "Make episode now"}
+        />
+      )}
+
+      {!plan.is_host && episode?.status !== "ready" && (
+        <p className="text-sm text-stone-600">The host hasn&apos;t made the episode yet.</p>
+      )}
+
+      {episode?.status === "ready" && signed?.signedUrl && (
+        <ShareEpisode
+          episodeId={episode.id}
+          slug={slug}
+          cardUrl={signed.signedUrl}
+          headline={headline}
+          publicSlug={episode.public_share_slug}
+        />
+      )}
+
+      {namedMoments.length > 0 && (
+        <ExcludeGrid
+          slug={slug}
+          moments={namedMoments}
+          excludedIds={(myExclusions ?? []).map((e) => e.moment_id)}
+        />
+      )}
+
+      <StartPlanCta surface="episode" />
+    </main>
+  );
+}

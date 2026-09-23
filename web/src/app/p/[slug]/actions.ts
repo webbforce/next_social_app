@@ -120,3 +120,27 @@ export async function recordLinkShared(planId: string, channel: "whatsapp" | "im
   const user = await getCurrentUser();
   track("plan_link_shared", user?.id ?? null, { plan_id: planId, channel });
 }
+
+export async function recordMomentUploaded(
+  planId: string,
+  properties: { upload_ms: number; failed: boolean },
+) {
+  const user = await getCurrentUser();
+  track("moment_uploaded", user?.id ?? null, {
+    plan_id: planId,
+    is_guest: user?.isAnonymous ?? true,
+    ...properties,
+  });
+}
+
+export async function removeMoment(momentId: string, slug: string): Promise<Result> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("remove_moment", { p_moment_id: momentId });
+  if (error) return { error: "Couldn't remove that photo. Try again." };
+
+  revalidatePath(`/p/${slug}`);
+  return { error: null };
+}

@@ -48,6 +48,15 @@ export function whenPhrase(startsAt: Date, now = new Date()) {
 }
 
 // "Today, 19:00–21:00" or "Fri 26 Sep, 22:00 – Sat 27 Sep, 03:00"
+export function formatDuration(startsAt: Date, endsAt: Date) {
+  const minutes = Math.max(1, Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000));
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours === 0) return `${rest} min`;
+  if (rest === 0) return `${hours} h`;
+  return `${hours} h ${rest} min`;
+}
+
 export function formatRange(startsAt: Date, endsAt: Date, now = new Date()) {
   const startDay = dayLabel(startsAt, now);
   if (dayKey(startsAt) === dayKey(endsAt)) {

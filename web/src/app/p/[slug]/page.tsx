@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Avatar } from "@/components/avatar";
+import { BrandLink } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
-import { getPlanBySlug, planHeadline, type PlanStatus } from "@/lib/plan";
+import { isPhotoWindowOpen } from "@/lib/moments";
+import { getPlanBySlug, getPlanEpisode, getPlanMoments, planHeadline, type PlanStatus } from "@/lib/plan";
+import { MakeEpisodeButton } from "./episode/make-button";
 import { createClient } from "@/lib/supabase/server";
 import { formatRange, formatTime } from "@/lib/time";
 import { HostTools, RemoveButton } from "./host-tools";
+import { MomentsPanel } from "./moments-panel";
 import { OpenTracker } from "./open-tracker";
 import { RsvpPanel } from "./rsvp-panel";
 import { SharePanel } from "./share-panel";
@@ -50,7 +54,7 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
   const isInsider = plan.is_host || plan.my_rsvp === "in" || plan.my_rsvp === "maybe";
   const isLive = plan.status === "open" || plan.status === "happening";
 
-  const [{ data: profile }, { data: updates }] = await Promise.all([
+  const [{ data: profile }, { data: updates }, moments, episode] = await Promise.all([
     user
       ? supabase.from("profiles").select("is_18_plus_confirmed").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -62,6 +66,8 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
           .order("created_at")
           .returns<Update[]>()
       : Promise.resolve({ data: null }),
+    isInsider ? getPlanMoments(plan.id) : Promise.resolve([]),
+    isInsider ? getPlanEpisode(plan.id) : Promise.resolve(null),
   ]);
 
   const going = plan.participants.filter((p) => p.rsvp === "in");
@@ -72,9 +78,7 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
   return (
     <main className="flex flex-1 flex-col gap-5 py-6">
       <OpenTracker slug={slug} />
-      <Link href="/" className="text-sm font-semibold tracking-wide text-stone-500 uppercase">
-        Upfor
-      </Link>
+      <BrandLink />
 
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
@@ -179,6 +183,34 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
           )}
           {isInsider && plan.status !== "cancelled" && <UpdateForm planId={plan.id} slug={slug} />}
         </section>
+      )}
+
+      {isInsider && user && (
+        <MomentsPanel
+          planId={plan.id}
+          slug={slug}
+          userId={user.id}
+          isHost={plan.is_host}
+          canUpload={isPhotoWindowOpen(plan.starts_at, plan.ends_at, plan.status)}
+          initialMoments={moments.map((m) => ({
+            ...m,
+            uploaderName:
+              m.uploaderId === plan.host.id
+                ? plan.host.first_name
+                : (plan.participants.find((p) => p.user_id === m.uploaderId)?.first_name ?? m.uploaderName),
+          }))}
+        />
+      )}
+
+      {isInsider && episode?.status === "ready" && (
+        <Link href={`/p/${slug}/episode`} className="card flex flex-col gap-1 active:bg-stone-100">
+          <span className="font-semibold">See the episode →</span>
+          <span className="text-stone-600">The recap from this plan.</span>
+        </Link>
+      )}
+
+      {plan.is_host && moments.length > 0 && episode?.status !== "ready" && (
+        <MakeEpisodeButton slug={slug} label="Make episode now" />
       )}
 
       {plan.is_host && isLive && <HostTools planId={plan.id} slug={slug} canCancel />}

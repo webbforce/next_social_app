@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand";
 
 export default function Home() {
   return (
     <main className="flex flex-1 flex-col justify-center gap-8 py-16">
-      <p className="text-sm font-semibold tracking-wide text-stone-500 uppercase">Upfor</p>
+      <BrandMark size={72} />
       <h1 className="text-4xl leading-tight font-bold tracking-tight">
         Make a plan in 30 seconds. Drop the link in your group chat.
       </h1>
