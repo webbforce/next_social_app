@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility btn {
+  @apply inline-flex h-12 items-center justify-center rounded-full px-5 text-base font-semibold transition-colors disabled:opacity-50;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility btn-primary {
+  @apply btn bg-stone-900 text-white active:bg-stone-700;
+}
+
+@utility btn-secondary {
+  @apply btn border border-stone-300 bg-white text-stone-900 active:bg-stone-100;
+}
+
+@utility input {
+  @apply h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none focus:border-stone-900;
+}
+
+@utility card {
+  @apply rounded-3xl border border-stone-200 bg-white p-5;
 }
