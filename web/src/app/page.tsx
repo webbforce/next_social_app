@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
+import { SignOutButton } from "@/app/sign-out-button";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,11 @@ export default async function Home() {
           <Link href="/free" className="btn-secondary w-full">
             Who&apos;s free
           </Link>
+        )}
+        {isHost && (
+          <div className="pt-2 text-center">
+            <SignOutButton />
+          </div>
         )}
       </div>
     </main>

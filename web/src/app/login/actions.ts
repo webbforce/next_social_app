@@ -1,8 +1,15 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+
+export async function signOut() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}
 
 type Entry = "direct" | "plan_page" | "episode_page" | "public_episode";
 

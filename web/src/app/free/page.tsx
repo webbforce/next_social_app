@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { BrandLink } from "@/components/brand";
+import { SignOutButton } from "@/app/sign-out-button";
 import { getCurrentUser } from "@/lib/auth";
 import { FREE_INTENT_LABEL, isFreeIntent, sharedFreeTag } from "@/lib/free";
 import { createClient } from "@/lib/supabase/server";
@@ -61,7 +62,10 @@ export default async function FreePage() {
   return (
     <main className="flex flex-1 flex-col gap-5 py-6">
       <OpenTracker freePeopleVisible={others.length} />
-      <BrandLink />
+      <div className="flex items-center justify-between">
+        <BrandLink />
+        <SignOutButton />
+      </div>
       <h1 className="text-3xl font-bold tracking-tight">Who&apos;s free</h1>
       <FreeForm active={mineIntent} />
 
