@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BrandLink } from "@/components/brand";
+import { ReportControl } from "@/app/report/report-control";
 import { StartPlanCta } from "@/app/p/[slug]/episode/start-plan-cta";
+import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PublicEpisodeTracker } from "./open-tracker";
 
@@ -20,17 +22,19 @@ async function getPublicEpisode(slug: string) {
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("get_public_episode", { p_slug: slug });
   if (error || !data) return null;
-  return data as {
+  const episode = data as {
     id: string;
     activity: string;
     card_path: string | null;
     highlights: { people?: number; photos?: number; duration?: string; place?: string | null };
   };
+  const { data: row } = await admin.from("episodes").select("plan_id").eq("id", episode.id).maybeSingle();
+  return { ...episode, plan_id: (row?.plan_id as string | undefined) ?? null };
 }
 
 export default async function PublicEpisodePage(props: PageProps<"/e/[slug]">) {
   const { slug } = await props.params;
-  const episode = await getPublicEpisode(slug);
+  const [episode, user] = await Promise.all([getPublicEpisode(slug), getCurrentUser()]);
   if (!episode) notFound();
 
   const admin = createAdminClient();
@@ -48,6 +52,15 @@ export default async function PublicEpisodePage(props: PageProps<"/e/[slug]">) {
         <img src={signed.signedUrl} alt={`Episode of ${episode.activity}`} className="w-full rounded-3xl" />
       )}
       <StartPlanCta surface="public_episode" />
+      {episode.plan_id && (
+        <ReportControl
+          targetType="plan"
+          targetId={episode.plan_id}
+          planId={episode.plan_id}
+          hasSession={!!user}
+          label="Report this plan"
+        />
+      )}
     </main>
   );
 }

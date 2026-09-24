@@ -7,6 +7,7 @@ import { REEL_PHOTO_MIN, statsLine } from "@/lib/episode";
 import { getPlanBySlug, getPlanEpisode, getPlanMoments } from "@/lib/plan";
 import { defaultTrack, isTrackId } from "@/lib/tracks";
 import { createClient } from "@/lib/supabase/server";
+import { ReportControl } from "@/app/report/report-control";
 import { ExcludeGrid } from "./exclude-grid";
 import { MakeEpisodeButton } from "./make-button";
 import { ReelPlayer } from "./reel-player";
@@ -151,10 +152,19 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
           slug={slug}
           moments={namedMoments}
           excludedIds={(myExclusions ?? []).map((e) => e.moment_id)}
+          userId={user.id}
         />
       )}
 
       <StartPlanCta surface="episode" />
+
+      <ReportControl
+        targetType="plan"
+        targetId={plan.id}
+        slug={slug}
+        hasSession={!!user}
+        label="Report this plan"
+      />
     </main>
   );
 }

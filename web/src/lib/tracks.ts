@@ -1,7 +1,7 @@
 export const TRACKS = [
-  { id: "warm", label: "Warm" },
-  { id: "night", label: "Night" },
-  { id: "pulse", label: "Pulse" },
+  { id: "warm", label: "Warm", src: "/tracks/warm.mp3" },
+  { id: "night", label: "Night", src: "/tracks/night.mp3" },
+  { id: "pulse", label: "Pulse", src: "/tracks/pulse.mp3" },
 ] as const;
 
 export type TrackId = (typeof TRACKS)[number]["id"];

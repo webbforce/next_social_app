@@ -49,7 +49,7 @@ export function ReelPlayer({
     <button
       type="button"
       onClick={() => {
-        void audio.current?.ctx.resume();
+        void audio.current?.play();
         setIndex(0);
       }}
       className="relative aspect-[9/16] w-full overflow-hidden rounded-3xl border border-stone-200 bg-stone-900 text-left"

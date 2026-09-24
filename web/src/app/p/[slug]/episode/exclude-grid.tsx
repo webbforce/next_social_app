@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ReportControl } from "@/app/report/report-control";
 import type { MomentView } from "@/lib/moments";
 import { toggleExclusion } from "./actions";
 
@@ -8,10 +9,12 @@ export function ExcludeGrid({
   slug,
   moments,
   excludedIds,
+  userId,
 }: {
   slug: string;
   moments: MomentView[];
   excludedIds: string[];
+  userId: string;
 }) {
   const [mine, setMine] = useState(new Set(excludedIds));
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +48,7 @@ export function ExcludeGrid({
         {moments.map((m) => {
           const out = mine.has(m.id);
           return (
-            <li key={m.id}>
+            <li key={m.id} className="flex flex-col gap-1">
               <button
                 type="button"
                 disabled={pending}
@@ -63,6 +66,9 @@ export function ExcludeGrid({
                   </span>
                 )}
               </button>
+              {m.uploaderId !== userId && (
+                <ReportControl targetType="moment" targetId={m.id} slug={slug} hasSession />
+              )}
             </li>
           );
         })}

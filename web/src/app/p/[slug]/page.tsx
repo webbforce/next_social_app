@@ -11,6 +11,7 @@ import { getPlanBySlug, getPlanEpisode, getPlanMoments, planHeadline, type PlanS
 import { MakeEpisodeButton } from "./episode/make-button";
 import { createClient } from "@/lib/supabase/server";
 import { formatRange, formatTime } from "@/lib/time";
+import { ReportControl } from "@/app/report/report-control";
 import { HostTools, RemoveButton } from "./host-tools";
 import { MomentsPanel } from "./moments-panel";
 import { OpenTracker } from "./open-tracker";
@@ -155,12 +156,28 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
             <Avatar id={plan.host.id} name={plan.host.first_name} />
             <span className="flex-1">{plan.host.first_name}</span>
             <span className="text-sm text-stone-500">Host</span>
+            {user?.id !== plan.host.id && (
+              <ReportControl
+                targetType="profile"
+                targetId={plan.host.id}
+                slug={slug}
+                hasSession={!!user}
+              />
+            )}
           </li>
           {going.map((p) => (
             <li key={p.id} className="flex items-center gap-3">
               <Avatar id={p.user_id} name={p.first_name} />
               <span className="flex-1">{p.first_name}</span>
               {plan.is_host && <RemoveButton participantId={p.id} name={p.first_name} slug={slug} />}
+              {user?.id !== p.user_id && (
+                <ReportControl
+                  targetType="profile"
+                  targetId={p.user_id}
+                  slug={slug}
+                  hasSession={!!user}
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -173,6 +190,14 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
                   <Avatar id={p.user_id} name={p.first_name} />
                   <span className="flex-1">{p.first_name}</span>
                   {plan.is_host && <RemoveButton participantId={p.id} name={p.first_name} slug={slug} />}
+                  {user?.id !== p.user_id && (
+                    <ReportControl
+                      targetType="profile"
+                      targetId={p.user_id}
+                      slug={slug}
+                      hasSession={!!user}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
@@ -234,6 +259,14 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
       )}
 
       {plan.is_host && isLive && <HostTools planId={plan.id} slug={slug} canCancel />}
+
+      <ReportControl
+        targetType="plan"
+        targetId={plan.id}
+        slug={slug}
+        hasSession={!!user}
+        label="Report this plan"
+      />
 
       {!plan.is_host && (
         <Link href="/new" className="card flex flex-col gap-1 active:bg-stone-100">

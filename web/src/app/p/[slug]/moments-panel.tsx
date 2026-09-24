@@ -8,6 +8,7 @@ import {
   type MomentView,
 } from "@/lib/moments";
 import { createClient } from "@/lib/supabase/client";
+import { ReportControl } from "@/app/report/report-control";
 import { recordMomentUploaded, removeMoment } from "./actions";
 
 type LocalPhoto = {
@@ -279,8 +280,8 @@ export function MomentsPanel({
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={open.url} alt={`Photo from ${open.uploaderName}`} className="min-h-0 flex-1 object-contain" />
-          {(isHost || open.uploaderId === userId) && (
-            <div className="p-4">
+          <div className="flex flex-col gap-3 p-4">
+            {(isHost || open.uploaderId === userId) && (
               <button
                 type="button"
                 className="btn-secondary w-full text-red-700"
@@ -289,8 +290,17 @@ export function MomentsPanel({
               >
                 Remove photo
               </button>
-            </div>
-          )}
+            )}
+            {open.uploaderId !== userId && (
+              <ReportControl
+                targetType="moment"
+                targetId={open.id}
+                slug={slug}
+                hasSession
+                label="Report photo"
+              />
+            )}
+          </div>
         </div>
       )}
     </section>
