@@ -11,6 +11,14 @@ type Step = "phone" | "code" | "profile";
 
 const PHONE_HINT = "Dutch mobiles are 06 plus 8 digits, like 06 1234 5678.";
 
+function signupEntry(next: string): "direct" | "plan_page" | "episode_page" | "public_episode" {
+  const from = new URLSearchParams(next.split("?")[1] ?? "").get("from");
+  if (from === "public_episode") return "public_episode";
+  if (from === "episode") return "episode_page";
+  if (from === "plan_page" || next.startsWith("/p/")) return "plan_page";
+  return "direct";
+}
+
 function otpError(message: string) {
   const text = message.toLowerCase();
   if (
@@ -73,7 +81,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const entry = next.startsWith("/p/") ? "plan_page" : "direct";
+  const entry = signupEntry(next);
   const supabase = createClient();
 
   function sendCode(e: React.FormEvent) {

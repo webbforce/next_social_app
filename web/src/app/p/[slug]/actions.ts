@@ -109,6 +109,18 @@ export async function postUpdate(planId: string, slug: string, _prev: Result, fo
   return { error: null };
 }
 
+export async function leavePlan(slug: string): Promise<Result> {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Sign in first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("leave_plan", { p_slug: slug });
+  if (error) return { error: "Couldn't remove you from this plan. Try again." };
+
+  revalidatePath(`/p/${slug}`);
+  return { error: null };
+}
+
 export async function removeParticipant(participantId: string, slug: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_participant", { p_participant_id: participantId });

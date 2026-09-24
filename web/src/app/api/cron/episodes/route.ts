@@ -1,4 +1,5 @@
 import { generateDueEpisodes } from "@/lib/episode-render";
+import { runStageAMaintenance } from "@/lib/stage-a-jobs";
 
 function authorized(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -12,6 +13,6 @@ export async function GET(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await generateDueEpisodes();
-  return Response.json(result);
+  const [episodes, maintenance] = await Promise.all([generateDueEpisodes(), runStageAMaintenance()]);
+  return Response.json({ ...episodes, ...maintenance });
 }

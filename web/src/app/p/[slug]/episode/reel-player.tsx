@@ -14,11 +14,13 @@ export function ReelPlayer({
   hostName,
   activity,
   trackId,
+  link,
 }: {
   slides: ReelSlide[];
   hostName: string;
   activity: string;
   trackId: TrackId;
+  link: string;
 }) {
   const [index, setIndex] = useState(0);
   const audio = useRef<ReturnType<typeof startTrack>>(null);
@@ -59,6 +61,7 @@ export function ReelPlayer({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-stone-950 px-8 text-center text-stone-50">
           <BrandMark size={48} />
           <p className="text-sm tracking-[0.2em] text-stone-400">MADE WITH UPFOR</p>
+          <p className="text-sm text-stone-400">{link}</p>
           <p className="text-2xl font-bold">{hostName} was up for {activity}</p>
         </div>
       ) : (

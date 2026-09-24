@@ -1,6 +1,6 @@
 import { formatDuration, formatTime } from "@/lib/time";
 
-export type EpisodeTemplate = "bold" | "minimal";
+export type EpisodeTemplate = "bold" | "filmstrip" | "polaroid" | "minimal";
 
 export const REEL_PHOTO_MIN = 6;
 
@@ -63,7 +63,10 @@ export type EpisodePhoto = {
 };
 
 export function pickTemplate(activityTag: string | null): EpisodeTemplate {
-  return activityTag === "drinks" || activityTag === "party" ? "bold" : "minimal";
+  if (activityTag === "party") return "bold";
+  if (activityTag === "drinks") return "filmstrip";
+  if (activityTag === "coffee" || activityTag === "walk") return "polaroid";
+  return "minimal";
 }
 
 export function statsLine(h: EpisodeHighlights) {

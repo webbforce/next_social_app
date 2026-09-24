@@ -19,7 +19,7 @@ export function ShareEpisode({
   cardUrl: string;
   headline: string;
   publicSlug: string | null;
-  reel?: { slides: ReelSlide[]; hostName: string; activity: string } | null;
+  reel?: { slides: ReelSlide[]; hostName: string; activity: string; link: string } | null;
   videoUrl?: string | null;
 }) {
   const [copied, setCopied] = useState(false);
@@ -51,7 +51,7 @@ export function ShareEpisode({
       setFile(saved);
       return { ...saved, type: blob.type };
     }
-    const recorded = await recordReelFile(reel.slides, reel.hostName, reel.activity);
+    const recorded = await recordReelFile(reel.slides, reel.hostName, reel.activity, reel.link);
     setFile(recorded);
     void persistReel(recorded.blob);
     return { ...recorded, type: recorded.blob.type };

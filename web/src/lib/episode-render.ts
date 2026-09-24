@@ -4,6 +4,7 @@ import { buildReelClips, computeHighlights, pickFormat, pickTemplate, type Episo
 import { defaultTrack, isTrackId } from "@/lib/tracks";
 import { renderEpisodeCard } from "@/lib/episode-card";
 import { PHOTO_WINDOW_HOURS } from "@/lib/moments";
+import { siteLabel } from "@/lib/site";
 import type { PlanView } from "@/lib/plan";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -115,6 +116,7 @@ export async function renderEpisodeForPlan(
       template,
       highlights,
       photos,
+      link: siteLabel(),
     });
   } catch (err) {
     console.error("episode card with photos failed", err);
@@ -125,6 +127,7 @@ export async function renderEpisodeForPlan(
         template,
         highlights,
         photos: [],
+        link: siteLabel(),
       });
     } catch (fallbackErr) {
       await admin.from("episodes").update({ status: "failed", error: "render_failed" }).eq("plan_id", plan.id);

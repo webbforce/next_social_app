@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { BrandLink } from "@/components/brand";
+import { DeleteAccountButton } from "@/app/delete-account-button";
 import { SignOutButton } from "@/app/sign-out-button";
 import { getCurrentUser } from "@/lib/auth";
 import { FREE_INTENT_LABEL, isFreeIntent, sharedFreeTag } from "@/lib/free";
@@ -75,7 +76,10 @@ export default async function FreePage() {
       <OpenTracker freePeopleVisible={others.length} />
       <div className="flex items-center justify-between">
         <BrandLink />
-        <SignOutButton />
+        <div className="flex items-center gap-4">
+          <DeleteAccountButton />
+          <SignOutButton />
+        </div>
       </div>
       <h1 className="text-3xl font-bold tracking-tight">Who&apos;s free</h1>
       <FreeForm active={mineIntent} />

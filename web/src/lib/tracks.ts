@@ -11,5 +11,7 @@ export function isTrackId(value: unknown): value is TrackId {
 }
 
 export function defaultTrack(template: string): TrackId {
-  return template === "bold" ? "pulse" : "warm";
+  if (template === "bold") return "pulse";
+  if (template === "filmstrip") return "night";
+  return "warm";
 }

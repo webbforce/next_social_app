@@ -22,19 +22,58 @@ function grid(photos: EpisodePhoto[]) {
   return { cols: 3, cell: 280 };
 }
 
+function filmFrame(photo: EpisodePhoto) {
+  return (
+    <div
+      key={photo.id}
+      style={{ display: "flex", alignItems: "center", gap: 12, background: "#292524", padding: 12 }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {[0, 1, 2].map((n) => (
+          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#0c0a09" }} />
+        ))}
+      </div>
+      <img src={photo.url} alt="" width={760} height={280} style={{ objectFit: "cover" }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {[0, 1, 2].map((n) => (
+          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#0c0a09" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function polaroid(photo: EpisodePhoto, width: number, height: number) {
+  return (
+    <div
+      key={photo.id}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        background: "#fff",
+        padding: 16,
+        paddingBottom: 48,
+      }}
+    >
+      <img src={photo.url} alt="" width={width} height={height} style={{ objectFit: "cover" }} />
+    </div>
+  );
+}
+
 export async function renderEpisodeCard(input: {
   activity: string;
   hostName: string;
   template: EpisodeTemplate;
   highlights: EpisodeHighlights;
   photos: EpisodePhoto[];
+  link: string;
 }) {
-  const bold = input.template === "bold";
-  const bg = bold ? "#0c0a09" : "#fafaf9";
-  const fg = bold ? "#fafaf9" : "#1c1917";
-  const muted = bold ? "#a8a29e" : "#57534e";
+  const dark = input.template === "bold" || input.template === "filmstrip";
+  const bg = input.template === "polaroid" ? "#f3ead7" : dark ? "#0c0a09" : "#fafaf9";
+  const fg = dark ? "#fafaf9" : "#1c1917";
+  const muted = dark ? "#a8a29e" : "#57534e";
   const { cell } = grid(input.photos);
-  const shown = input.photos.slice(0, 9);
+  const shown = input.photos.slice(0, input.template === "filmstrip" ? 3 : input.template === "polaroid" ? 4 : 9);
 
   const response = new ImageResponse(
     (
@@ -61,18 +100,28 @@ export async function renderEpisodeCard(input: {
           <div style={{ fontSize: 32, color: muted }}>{statsLine(input.highlights)}</div>
         </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-          {shown.map((p) => (
-            <img
-              key={p.id}
-              src={p.url}
-              alt=""
-              width={cell}
-              height={cell}
-              style={{ objectFit: "cover", borderRadius: 24 }}
-            />
-          ))}
-        </div>
+        {input.template === "filmstrip" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {shown.map((p) => filmFrame(p))}
+          </div>
+        ) : input.template === "polaroid" ? (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+            {shown.map((p) => polaroid(p, shown.length > 1 ? 420 : 860, shown.length > 1 ? 320 : 640))}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            {shown.map((p) => (
+              <img
+                key={p.id}
+                src={p.url}
+                alt=""
+                width={cell}
+                height={cell}
+                style={{ objectFit: "cover", borderRadius: input.template === "bold" ? 8 : 24 }}
+              />
+            ))}
+          </div>
+        )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {[input.highlights.lastPhoto, input.highlights.busiest, input.highlights.topShooter]
@@ -82,7 +131,7 @@ export async function renderEpisodeCard(input: {
                 {line}
               </div>
             ))}
-          <div style={{ marginTop: 16, fontSize: 28, color: muted }}>made with Upfor</div>
+          <div style={{ marginTop: 16, fontSize: 28, color: muted }}>{`made with Upfor · ${input.link}`}</div>
         </div>
       </div>
     ),

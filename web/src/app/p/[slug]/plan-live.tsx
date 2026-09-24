@@ -6,6 +6,7 @@ import { ReportControl } from "@/app/report/report-control";
 import { planHeadline, type PlanStatus, type PlanUpdate, type PlanView } from "@/lib/plan-view";
 import { formatRange, formatTime } from "@/lib/time";
 import { refreshPlanSnapshot } from "./actions";
+import { LeavePlanButton } from "./leave-plan";
 import { HostTools, RemoveButton } from "./host-tools";
 import { RsvpPanel } from "./rsvp-panel";
 import { SharePanel } from "./share-panel";
@@ -207,6 +208,8 @@ export function PlanLive({
       )}
 
       {plan.is_host && isLive && <HostTools plan={plan} slug={slug} />}
+
+      {isMember && !plan.is_host && !plan.am_removed && <LeavePlanButton slug={slug} />}
     </>
   );
 }

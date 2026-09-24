@@ -31,6 +31,7 @@ function drawEndCard(
   logo: HTMLImageElement | null,
   hostName: string,
   activity: string,
+  link: string,
 ) {
   ctx.fillStyle = "#0c0a09";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -41,7 +42,9 @@ function drawEndCard(
   ctx.textAlign = "center";
   ctx.fillStyle = "#a8a29e";
   ctx.font = "600 22px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("MADE WITH UPFOR", WIDTH / 2, HEIGHT / 2 - 80);
+  ctx.fillText("MADE WITH UPFOR", WIDTH / 2, HEIGHT / 2 - 130);
+  ctx.font = "500 24px ui-sans-serif, system-ui, sans-serif";
+  ctx.fillText(link, WIDTH / 2, HEIGHT / 2 - 88);
   ctx.fillStyle = "#fafaf9";
   ctx.font = "700 42px ui-sans-serif, system-ui, sans-serif";
   const line = `${hostName} was up for ${activity}`;
@@ -73,6 +76,7 @@ export async function recordReelFile(
   slides: ReelSlide[],
   hostName: string,
   activity: string,
+  link: string,
 ): Promise<{ blob: Blob; name: string }> {
   const mime = pickMime();
   if (!mime || !slides.length) throw new Error("This browser can't export a reel file.");
@@ -102,7 +106,7 @@ export async function recordReelFile(
     drawCover(ctx, photos[i]);
     await wait(slides[i].ms);
   }
-  drawEndCard(ctx, logo, hostName, activity);
+  drawEndCard(ctx, logo, hostName, activity, link);
   await wait(END_MS);
   recorder.stop();
   stream.getTracks().forEach((track) => track.stop());

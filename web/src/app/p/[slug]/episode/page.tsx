@@ -5,6 +5,7 @@ import { BrandLink } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
 import { REEL_PHOTO_MIN, statsLine } from "@/lib/episode";
 import { getPlanBySlug, getPlanEpisode, getPlanMoments } from "@/lib/plan";
+import { siteLabel } from "@/lib/site";
 import { defaultTrack, isTrackId } from "@/lib/tracks";
 import { createClient } from "@/lib/supabase/server";
 import { ReportControl } from "@/app/report/report-control";
@@ -103,6 +104,7 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
             hostName={plan.host.first_name}
             activity={plan.activity}
             trackId={trackId}
+            link={siteLabel()}
           />
           <TrackPicker slug={slug} episodeId={episode.id} current={trackId} />
         </>
@@ -149,7 +151,7 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
           publicSlug={episode.public_share_slug}
           reel={
             showReel
-              ? { slides: reelSlides, hostName: plan.host.first_name, activity: plan.activity }
+              ? { slides: reelSlides, hostName: plan.host.first_name, activity: plan.activity, link: siteLabel() }
               : null
           }
           videoUrl={showReel ? (signedVideo?.signedUrl ?? null) : null}

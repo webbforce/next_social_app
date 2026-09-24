@@ -11,6 +11,18 @@ export async function signOut() {
   redirect("/");
 }
 
+export async function deleteAccount(): Promise<{ error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user || user.isAnonymous) return { error: "Sign in with your phone first." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("request_account_deletion");
+  if (error) return { error: "Couldn't delete the account. Try again." };
+
+  await supabase.auth.signOut();
+  redirect("/");
+}
+
 type Entry = "direct" | "plan_page" | "episode_page" | "public_episode";
 
 export async function recordSignupStarted(entry: Entry) {

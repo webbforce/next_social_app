@@ -82,7 +82,7 @@ export async function setEpisodeTrack(slug: string, episodeId: string, trackId: 
   return { error: null };
 }
 
-export async function recordStartOwnPlan(surface: "episode" | "public_episode") {
+export async function recordStartOwnPlan(surface: "episode" | "post_plan" | "public_episode") {
   const user = await getCurrentUser();
   track("start_own_plan_tapped", user?.id ?? null, { surface });
 }

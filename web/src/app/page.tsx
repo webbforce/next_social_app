@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
+import { DeleteAccountButton } from "@/app/delete-account-button";
 import { SignOutButton } from "@/app/sign-out-button";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export default async function Home() {
               Reports
             </Link>
             <SignOutButton />
+            <DeleteAccountButton />
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ import { isAutoEpisodeDue, renderEpisodeForPlan } from "@/lib/episode-render";
 import { isPhotoWindowOpen } from "@/lib/moments";
 import { getPlanBySlug, getPlanEpisode, getPlanMoments, getPlanUpdates, planHeadline } from "@/lib/plan";
 import { MakeEpisodeButton } from "./episode/make-button";
+import { StartPlanCta } from "./episode/start-plan-cta";
 import { createClient } from "@/lib/supabase/server";
 import { ReportControl } from "@/app/report/report-control";
 import { MomentsPanel } from "./moments-panel";
@@ -118,12 +119,11 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
       />
 
       {!plan.is_host && (
-        <Link href="/new" className="card flex flex-col gap-1 active:bg-stone-100">
-          <span className="font-semibold">
-            {plan.status === "ended" ? "Doing something else this week?" : "Got your own idea?"}
-          </span>
-          <span className="text-stone-600">Make a plan in 30 seconds →</span>
-        </Link>
+        <StartPlanCta
+          surface="post_plan"
+          title={plan.status === "ended" ? "Doing something else this week?" : "Got your own idea?"}
+          detail="Make a plan in 30 seconds →"
+        />
       )}
     </main>
   );

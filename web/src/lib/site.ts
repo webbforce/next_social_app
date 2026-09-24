@@ -5,3 +5,11 @@ export function siteUrl() {
   }
   return "http://localhost:3000";
 }
+
+export function siteLabel() {
+  try {
+    return new URL(siteUrl()).host.replace(/^www\./, "");
+  } catch {
+    return "upfor";
+  }
+}
