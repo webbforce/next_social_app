@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { DateTimeFields } from "@/components/date-time-fields";
 import type { PlanView } from "@/lib/plan-view";
-import { toDatetimeLocalValue } from "@/lib/time";
+import { fromDateAndTime, toDateInputValue, toTimeInputValue } from "@/lib/time";
 import { updatePlan } from "./actions";
 
 const DURATIONS = [1, 1.5, 2, 3, 4, 5, 6, 8];
@@ -25,7 +26,9 @@ export function EditPlanForm({
     ? DURATIONS
     : [...DURATIONS, currentHours].sort((a, b) => a - b);
 
-  const [startsAt, setStartsAt] = useState(() => toDatetimeLocalValue(new Date(plan.starts_at)));
+  const start = new Date(plan.starts_at);
+  const [date, setDate] = useState(() => toDateInputValue(start));
+  const [time, setTime] = useState(() => toTimeInputValue(start));
   const [hours, setHours] = useState(currentHours);
   const [place, setPlace] = useState(plan.place_url ?? plan.place_text ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +36,8 @@ export function EditPlanForm({
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const start = new Date(startsAt);
-    if (Number.isNaN(start.getTime())) return setError("Pick a start time.");
+    const start = fromDateAndTime(date, time);
+    if (!start) return setError("Pick a start time.");
     setError(null);
     const data = new FormData();
     data.set("starts_at", start.toISOString());
@@ -55,13 +58,7 @@ export function EditPlanForm({
       <h2 className="text-lg font-semibold">Time and place</h2>
       <label className="flex flex-col gap-2">
         <span className="text-sm font-medium">Starts</span>
-        <input
-          className="input"
-          type="datetime-local"
-          value={startsAt}
-          onChange={(e) => setStartsAt(e.target.value)}
-          required
-        />
+        <DateTimeFields date={date} time={time} onDate={setDate} onTime={setTime} />
       </label>
       <label className="flex items-center justify-between gap-3 text-sm text-stone-600">
         <span>Lasts about</span>

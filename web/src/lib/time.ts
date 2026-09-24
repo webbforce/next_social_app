@@ -31,7 +31,7 @@ export function formatTime(d: Date) {
   return timeFormat.format(d);
 }
 
-// Value for <input type="datetime-local"> in the campus time zone.
+// Values for <input type="date"> / <input type="time"> in the campus time zone.
 export function toDatetimeLocalValue(d: Date) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TIME_ZONE,
@@ -44,6 +44,20 @@ export function toDatetimeLocalValue(d: Date) {
   }).formatToParts(d);
   const n = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
   return `${n("year")}-${n("month")}-${n("day")}T${n("hour")}:${n("minute")}`;
+}
+
+export function toDateInputValue(d: Date) {
+  return toDatetimeLocalValue(d).slice(0, 10);
+}
+
+export function toTimeInputValue(d: Date) {
+  return toDatetimeLocalValue(d).slice(11, 16);
+}
+
+export function fromDateAndTime(date: string, time: string) {
+  if (!date || !time) return null;
+  const start = new Date(`${date}T${time}`);
+  return Number.isNaN(start.getTime()) ? null : start;
 }
 
 function dayLabel(d: Date, now: Date) {

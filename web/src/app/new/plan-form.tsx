@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { DateTimeFields } from "@/components/date-time-fields";
 import { ACTIVITIES, FREE_TEXT_HOURS, type ActivityTag } from "@/lib/activities";
+import { fromDateAndTime, toDateInputValue } from "@/lib/time";
 import { createPlan, type CreatePlanState } from "./actions";
 
 type StartMode = "now" | "today" | "pick";
@@ -14,13 +16,19 @@ function nextFullHour() {
   return `${String(d.getHours()).padStart(2, "0")}:00`;
 }
 
-function startFor(mode: StartMode, todayTime: string, picked: string) {
+function startFor(mode: StartMode, todayTime: string, pickedDate: string, pickedTime: string) {
   if (mode === "now") return new Date();
-  if (mode === "pick") return picked ? new Date(picked) : null;
+  if (mode === "pick") return fromDateAndTime(pickedDate, pickedTime);
   const [h, m] = todayTime.split(":").map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
   return d;
+}
+
+function tomorrowDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return toDateInputValue(d);
 }
 
 function Chip({
@@ -60,7 +68,8 @@ export function PlanForm({
   const [customActivity, setCustomActivity] = useState("");
   const [startMode, setStartMode] = useState<StartMode>("now");
   const [todayTime, setTodayTime] = useState(nextFullHour);
-  const [picked, setPicked] = useState("");
+  const [pickedDate, setPickedDate] = useState(tomorrowDate);
+  const [pickedTime, setPickedTime] = useState(nextFullHour);
   const [hours, setHours] = useState<number | null>(null);
   const [place, setPlace] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
@@ -71,7 +80,7 @@ export function PlanForm({
   const duration = hours ?? defaultHours;
 
   function submit(formData: FormData) {
-    const start = startFor(startMode, todayTime, picked);
+    const start = startFor(startMode, todayTime, pickedDate, pickedTime);
     if (!activity) return setLocalError("Pick an activity or type your own.");
     if (!start || Number.isNaN(start.getTime())) return setLocalError("Pick a start time.");
     if (startMode !== "now" && start.getTime() < Date.now() - 5 * 60 * 1000) {
@@ -143,12 +152,11 @@ export function PlanForm({
           />
         )}
         {startMode === "pick" && (
-          <input
-            className="input"
-            type="datetime-local"
-            value={picked}
-            onChange={(e) => setPicked(e.target.value)}
-            required
+          <DateTimeFields
+            date={pickedDate}
+            time={pickedTime}
+            onDate={setPickedDate}
+            onTime={setPickedTime}
           />
         )}
         <label className="flex items-center justify-between gap-3 text-sm text-stone-600">

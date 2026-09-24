@@ -17,7 +17,13 @@
 }
 
 @utility input {
-  @apply h-12 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none focus:border-stone-900;
+  @apply h-12 w-full min-w-0 max-w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none focus:border-stone-900;
+}
+
+input[type="date"],
+input[type="time"] {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @utility card {
