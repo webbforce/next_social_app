@@ -8,6 +8,20 @@ import { recordSignupCompleted, recordSignupStarted } from "./actions";
 type Step = "phone" | "code" | "profile";
 
 // Accepts "06 1234 5678", "0031 6…", "+31 6…"; numbers without a country code are assumed Dutch.
+function otpError(message: string) {
+  const text = message.toLowerCase();
+  if (
+    text.includes("unsupported phone") ||
+    text.includes("phone provider") ||
+    text.includes("sms provider") ||
+    text.includes("twilio") ||
+    (text.includes("sending") && text.includes("sms"))
+  ) {
+    return "We couldn't text that number yet. Test phones still work; real SMS is turned on in Supabase under Authentication → Providers → Phone.";
+  }
+  return message;
+}
+
 function normalizePhone(raw: string) {
   let phone = raw.replace(/[\s\-().]/g, "");
   if (phone.startsWith("00")) phone = `+${phone.slice(2)}`;
@@ -66,14 +80,14 @@ export function LoginForm({
         }
         // The number already belongs to a host account: sign in to that one instead.
         if (error.code !== "phone_exists") {
-          setError(error.message);
+          setError(otpError(error.message));
           return;
         }
       }
 
       const { error } = await supabase.auth.signInWithOtp({ phone: normalized });
       if (error) {
-        setError(error.message);
+        setError(otpError(error.message));
         return;
       }
       setClaimingGuest(false);

@@ -143,7 +143,11 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
           cardUrl={signed.signedUrl}
           headline={headline}
           publicSlug={episode.public_share_slug}
-          hasReel={showReel}
+          reel={
+            showReel
+              ? { slides: reelSlides, hostName: plan.host.first_name, activity: plan.activity }
+              : null
+          }
         />
       )}
 

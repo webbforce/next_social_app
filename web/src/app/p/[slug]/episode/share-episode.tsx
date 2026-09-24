@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { recordReelFile, type ReelSlide } from "@/lib/reel-file";
 import { createPublicEpisodeLink, recordEpisodeShared } from "./actions";
 
 export function ShareEpisode({
@@ -9,38 +10,59 @@ export function ShareEpisode({
   cardUrl,
   headline,
   publicSlug,
-  hasReel = false,
+  reel = null,
 }: {
   episodeId: string;
   slug: string;
   cardUrl: string;
   headline: string;
   publicSlug: string | null;
-  hasReel?: boolean;
+  reel?: { slides: ReelSlide[]; hostName: string; activity: string } | null;
 }) {
   const [copied, setCopied] = useState(false);
   const [link, setLink] = useState(publicSlug);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<{ blob: Blob; name: string } | null>(null);
+
+  async function media() {
+    if (!reel) {
+      const res = await fetch(cardUrl);
+      return { blob: await res.blob(), name: "upfor-episode.png", type: "image/png" };
+    }
+    if (file) return { ...file, type: file.blob.type };
+    const recorded = await recordReelFile(reel.slides, reel.hostName, reel.activity);
+    setFile(recorded);
+    return { ...recorded, type: recorded.blob.type };
+  }
 
   async function download() {
-    const res = await fetch(cardUrl);
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "upfor-episode.png";
-    a.click();
-    URL.revokeObjectURL(url);
-    void recordEpisodeShared(episodeId, "download");
+    setError(null);
+    setBusy(true);
+    try {
+      const out = await media();
+      const url = URL.createObjectURL(out.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = out.name;
+      a.click();
+      URL.revokeObjectURL(url);
+      void recordEpisodeShared(episodeId, "download");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't make that file.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function nativeShare() {
+    setError(null);
+    setBusy(true);
     try {
-      const res = await fetch(cardUrl);
-      const blob = await res.blob();
-      const file = new File([blob], "upfor-episode.png", { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], text: headline });
+      const out = await media();
+      const shareFile = new File([out.blob], out.name, { type: out.type });
+      if (navigator.canShare?.({ files: [shareFile] })) {
+        await navigator.share({ files: [shareFile], text: headline });
       } else if (navigator.share) {
         await navigator.share({ text: headline, url: window.location.href });
       } else {
@@ -50,6 +72,8 @@ export function ShareEpisode({
       void recordEpisodeShared(episodeId, "native");
     } catch {
       // Closing the share sheet rejects.
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -70,19 +94,19 @@ export function ShareEpisode({
     <section className="card flex flex-col gap-3">
       <h2 className="text-lg font-semibold">Share the episode</h2>
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn-primary" onClick={nativeShare}>
-          Share
+        <button type="button" className="btn-primary" disabled={busy} onClick={() => void nativeShare()}>
+          {busy && reel ? "Making video…" : "Share"}
         </button>
-        <button type="button" className="btn-secondary" onClick={download}>
-          Download
+        <button type="button" className="btn-secondary" disabled={busy} onClick={() => void download()}>
+          {busy && reel ? "Making video…" : "Download"}
         </button>
-        <button type="button" className="btn-secondary col-span-2" onClick={makePublic}>
+        <button type="button" className="btn-secondary col-span-2" onClick={() => void makePublic()}>
           {copied ? "Public link copied" : link ? "Copy public link" : "Create a public link"}
         </button>
       </div>
       <p className="text-xs text-stone-500">
-        {hasReel
-          ? "Share and download send the still card. The reel plays on this page. "
+        {reel
+          ? "Share and download send a short video of the reel. First tap takes a few seconds. "
           : ""}
         The public link is off until someone here creates one. Leave out photos you appear in first.
       </p>
