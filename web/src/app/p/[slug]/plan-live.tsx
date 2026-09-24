@@ -79,7 +79,7 @@ export function PlanLive({
     <>
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <Avatar id={plan.host.id} name={plan.host.first_name} size="lg" />
+          <Avatar id={plan.host.id} name={plan.host.first_name} src={plan.host.photo_url} size="lg" />
           <p className="text-stone-600">
             <span className="font-semibold text-stone-900">{plan.host.first_name}</span>{" "}
             {plan.status === "ended" ? "was up for" : "is up for"}
@@ -133,7 +133,7 @@ export function PlanLive({
         </h2>
         <ul className="flex flex-col gap-3">
           <li className="flex items-center gap-3">
-            <Avatar id={plan.host.id} name={plan.host.first_name} />
+            <Avatar id={plan.host.id} name={plan.host.first_name} src={plan.host.photo_url} />
             <span className="flex-1">{plan.host.first_name}</span>
             <span className="text-sm text-stone-500">Host</span>
             {userId !== plan.host.id && (
@@ -147,7 +147,7 @@ export function PlanLive({
           </li>
           {going.map((p) => (
             <li key={p.id} className="flex items-center gap-3">
-              <Avatar id={p.user_id} name={p.first_name} />
+              <Avatar id={p.user_id} name={p.first_name} src={p.photo_url} />
               <span className="flex-1">{p.first_name}</span>
               {plan.is_host && <RemoveButton participantId={p.id} name={p.first_name} slug={slug} />}
               {userId !== p.user_id && (
@@ -167,7 +167,7 @@ export function PlanLive({
             <ul className="flex flex-col gap-3">
               {maybe.map((p) => (
                 <li key={p.id} className="flex items-center gap-3">
-                  <Avatar id={p.user_id} name={p.first_name} />
+                  <Avatar id={p.user_id} name={p.first_name} src={p.photo_url} />
                   <span className="flex-1">{p.first_name}</span>
                   {plan.is_host && <RemoveButton participantId={p.id} name={p.first_name} slug={slug} />}
                   {userId !== p.user_id && (

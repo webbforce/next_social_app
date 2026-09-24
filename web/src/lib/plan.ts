@@ -15,8 +15,24 @@ export const getPlanBySlug = cache(async (slug: string) => {
   if (!data) return null;
   const plan = data as PlanView;
   plan.reclaimable_guests ??= [];
-  return plan;
+  return attachAvatarUrls(plan);
 });
+
+async function attachAvatarUrls(plan: PlanView) {
+  const supabase = await createClient();
+  const paths = [plan.host.photo_path, ...plan.participants.map((person) => person.photo_path)].filter(
+    (path): path is string => !!path,
+  );
+  const unique = [...new Set(paths)];
+  if (!unique.length) return plan;
+  const { data } = await supabase.storage.from("avatars").createSignedUrls(unique, 3600);
+  const urls = new Map((data ?? []).filter((row) => row.path && row.signedUrl).map((row) => [row.path, row.signedUrl]));
+  plan.host.photo_url = plan.host.photo_path ? (urls.get(plan.host.photo_path) ?? null) : null;
+  for (const person of plan.participants) {
+    person.photo_url = person.photo_path ? (urls.get(person.photo_path) ?? null) : null;
+  }
+  return plan;
+}
 
 export const getPlanMoments = cache(async (planId: string): Promise<MomentView[]> => {
   const supabase = await createClient();
@@ -56,6 +72,7 @@ export type EpisodeView = {
   template: string;
   status: "pending" | "rendering" | "ready" | "failed";
   card_path: string | null;
+  video_path: string | null;
   music_track: string | null;
   highlights: EpisodeHighlights;
   public_share_slug: string | null;
@@ -78,7 +95,7 @@ export const getPlanEpisode = cache(async (planId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("episodes")
-    .select("id, format, template, status, card_path, music_track, highlights, public_share_slug, ready_at, error")
+    .select("id, format, template, status, card_path, video_path, music_track, highlights, public_share_slug, ready_at, error")
     .eq("plan_id", planId)
     .maybeSingle();
   return (data as EpisodeView | null) ?? null;

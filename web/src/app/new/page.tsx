@@ -5,6 +5,7 @@ import { isActivityTag } from "@/lib/activities";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { BrandLink } from "@/components/brand";
+import { ProfilePhotoButton } from "@/app/profile-photo-button";
 import { SignOutButton } from "@/app/sign-out-button";
 import { PlanForm } from "./plan-form";
 
@@ -18,7 +19,7 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_18_plus_confirmed")
+    .select("is_18_plus_confirmed, photo_path")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.is_18_plus_confirmed) redirect("/login?next=/new");
@@ -34,6 +35,7 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
       </div>
       <h1 className="text-3xl font-bold tracking-tight">What are you up for?</h1>
       <PlanForm initialTag={initialTag} source={source} />
+      {profile && !profile.photo_path && <ProfilePhotoButton />}
       <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">
         Or say you&apos;re free tonight
       </Link>

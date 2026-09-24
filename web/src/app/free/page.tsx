@@ -41,15 +41,26 @@ export default async function FreePage() {
     : { data: [] as ProfileRow[] };
 
   const names = new Map((people ?? []).map((p) => [p.id, p]));
+  const avatarPaths = [...new Set((people ?? []).map((p) => p.photo_path).filter((path): path is string => !!path))];
+  const { data: signedAvatars } = avatarPaths.length
+    ? await supabase.storage.from("avatars").createSignedUrls(avatarPaths, 3600)
+    : { data: [] };
+  const avatarUrls = new Map(
+    (signedAvatars ?? []).filter((row) => row.path && row.signedUrl).map((row) => [row.path, row.signedUrl]),
+  );
   const mine = rows.find((row) => row.user_id === user.id);
   const others = rows
     .filter((row) => row.user_id !== user.id)
-    .map((row) => ({
-      id: row.user_id,
-      first_name: names.get(row.user_id)?.first_name ?? "Someone",
-      photo_path: names.get(row.user_id)?.photo_path ?? null,
-      intent: isFreeIntent(row.intent) ? row.intent : null,
-    }))
+    .map((row) => {
+      const photoPath = names.get(row.user_id)?.photo_path ?? null;
+      return {
+        id: row.user_id,
+        first_name: names.get(row.user_id)?.first_name ?? "Someone",
+        photo_path: photoPath,
+        photo_url: photoPath ? (avatarUrls.get(photoPath) ?? null) : null,
+        intent: isFreeIntent(row.intent) ? row.intent : null,
+      };
+    })
     .sort((a, b) => a.first_name.localeCompare(b.first_name));
 
   const mineIntent = mine ? (isFreeIntent(mine.intent) ? mine.intent : null) : undefined;
@@ -84,7 +95,7 @@ export default async function FreePage() {
           <ul className="flex flex-col gap-3">
             {others.map((person) => (
               <li key={person.id} className="flex items-center gap-3">
-                <Avatar id={person.id} name={person.first_name} />
+                <Avatar id={person.id} name={person.first_name} src={person.photo_url} />
                 <span className="flex-1">{person.first_name}</span>
                 <span className="text-sm text-stone-500">
                   {person.intent ? FREE_INTENT_LABEL[person.intent] : "Free"}

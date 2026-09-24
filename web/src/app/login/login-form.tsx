@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { PhotoField } from "@/components/photo-field";
 import { createClient } from "@/lib/supabase/client";
+import { uploadAvatarFile } from "@/lib/upload-avatar";
 import { recordSignupCompleted, recordSignupStarted } from "./actions";
 
 type Step = "phone" | "code" | "profile";
@@ -24,7 +26,7 @@ function otpError(message: string) {
     text.includes("twilio") ||
     (text.includes("sending") && text.includes("sms"))
   ) {
-    return "We couldn't send a code to that number.";
+    return `We couldn't send a code. ${message}`;
   }
   return message;
 }
@@ -65,6 +67,7 @@ export function LoginForm({
   const [firstName, setFirstName] = useState(guestFirstName);
   const [confirmed18, setConfirmed18] = useState(false);
   const [campusId, setCampusId] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   // A guest's anonymous account is upgraded in place so their plans and photos carry over.
   const [claimingGuest, setClaimingGuest] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -157,11 +160,21 @@ export function LoginForm({
         setStep("phone");
         return;
       }
+      let photoPath: string | undefined;
+      if (photo) {
+        try {
+          photoPath = await uploadAvatarFile(user.id, photo);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Couldn't save that photo.");
+          return;
+        }
+      }
       const { error } = await supabase.from("profiles").upsert({
         id: user.id,
         first_name: firstName.trim(),
         is_18_plus_confirmed: true,
         campus_id: campusId || null,
+        ...(photoPath ? { photo_path: photoPath } : {}),
       });
       if (error) {
         setError(error.message);
@@ -249,6 +262,7 @@ export function LoginForm({
           autoFocus
         />
       </label>
+      <PhotoField onFile={setPhoto} />
       {campuses.length > 0 && (
         <label className="flex flex-col gap-2">
           <span className="text-sm font-medium">Campus (optional)</span>

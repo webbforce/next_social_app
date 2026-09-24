@@ -145,7 +145,13 @@ export async function renderEpisodeForPlan(
 
   const { error: readyError } = await admin
     .from("episodes")
-    .update({ status: "ready", card_path: cardPath, ready_at: new Date().toISOString(), error: null })
+    .update({
+      status: "ready",
+      card_path: cardPath,
+      video_path: null,
+      ready_at: new Date().toISOString(),
+      error: null,
+    })
     .eq("plan_id", plan.id);
   if (readyError) return { error: "Couldn't finish the episode. Try again." };
 

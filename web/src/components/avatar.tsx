@@ -13,8 +13,29 @@ function colorFor(id: string) {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-export function Avatar({ id, name, size = "md" }: { id: string; name: string; size?: "md" | "lg" }) {
+export function Avatar({
+  id,
+  name,
+  src,
+  size = "md",
+}: {
+  id: string;
+  name: string;
+  src?: string | null;
+  size?: "md" | "lg";
+}) {
   const dims = size === "lg" ? "size-14 text-xl" : "size-9 text-sm";
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        aria-hidden
+        className={`inline-block shrink-0 rounded-full object-cover ${size === "lg" ? "size-14" : "size-9"}`}
+      />
+    );
+  }
   return (
     <span
       aria-hidden

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { PhotoField } from "@/components/photo-field";
 import type { Rsvp } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/client";
+import { uploadAvatarFile } from "@/lib/upload-avatar";
 import { reclaimGuest, submitRsvp } from "./actions";
 
 const OPTIONS: { value: Rsvp; label: string }[] = [
@@ -29,6 +31,7 @@ export function RsvpPanel({
   allowNewRsvp: boolean;
 }) {
   const [firstName, setFirstName] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const [confirmed18, setConfirmed18] = useState(false);
   const [someoneNew, setSomeoneNew] = useState(reclaimableGuests.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +59,26 @@ export function RsvpPanel({
 
     startTransition(async () => {
       if (!(await ensureGuestSession())) return;
+      let photoPath: string | null = null;
+      if (needsProfile && photo) {
+        const {
+          data: { user },
+        } = await createClient().auth.getUser();
+        if (!user) {
+          setError("Couldn't join right now. Try again in a minute.");
+          return;
+        }
+        try {
+          photoPath = await uploadAvatarFile(user.id, photo);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Couldn't save that photo.");
+          return;
+        }
+      }
       const result = await submitRsvp(
         slug,
         rsvp,
-        needsProfile ? { firstName, confirmed18 } : null,
+        needsProfile ? { firstName, confirmed18, photoPath } : null,
       );
       if (result.error) setError(result.error);
     });
@@ -135,6 +154,7 @@ export function RsvpPanel({
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
           />
+          <PhotoField onFile={setPhoto} />
           <label className="flex items-start gap-3 text-sm">
             <input
               type="checkbox"

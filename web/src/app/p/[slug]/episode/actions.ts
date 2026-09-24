@@ -6,6 +6,7 @@ import { track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import { renderEpisodeForPlan } from "@/lib/episode-render";
 import { getPlanBySlug } from "@/lib/plan";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { isTrackId, type TrackId } from "@/lib/tracks";
 
@@ -84,4 +85,49 @@ export async function setEpisodeTrack(slug: string, episodeId: string, trackId: 
 export async function recordStartOwnPlan(surface: "episode" | "public_episode") {
   const user = await getCurrentUser();
   track("start_own_plan_tapped", user?.id ?? null, { surface });
+}
+
+function reelExt(mime: string) {
+  return mime.includes("webm") ? "webm" : "mp4";
+}
+
+export async function createReelUpload(
+  slug: string,
+  episodeId: string,
+  mime: string,
+): Promise<{ error: string | null; path?: string; token?: string }> {
+  const user = await getCurrentUser();
+  const plan = await getPlanBySlug(slug);
+  if (!user || !plan) return { error: "Plan not found." };
+  const insider = plan.is_host || plan.my_rsvp === "in" || plan.my_rsvp === "maybe";
+  if (!insider) return { error: "Only people on the plan can save the reel." };
+  if (!mime.startsWith("video/")) return { error: "That isn't a video." };
+
+  const admin = createAdminClient();
+  const { data: episode } = await admin.from("episodes").select("id, plan_id").eq("id", episodeId).maybeSingle();
+  if (!episode || episode.plan_id !== plan.id) return { error: "Episode not found." };
+
+  const path = `${plan.id}/reel.${reelExt(mime)}`;
+  const { data, error } = await admin.storage.from("episodes").createSignedUploadUrl(path, { upsert: true });
+  if (error || !data) return { error: "Couldn't prepare the reel upload." };
+  return { error: null, path: data.path, token: data.token };
+}
+
+export async function finishReelUpload(
+  slug: string,
+  episodeId: string,
+  path: string,
+): Promise<{ error: string | null }> {
+  const user = await getCurrentUser();
+  const plan = await getPlanBySlug(slug);
+  if (!user || !plan) return { error: "Plan not found." };
+  const insider = plan.is_host || plan.my_rsvp === "in" || plan.my_rsvp === "maybe";
+  if (!insider) return { error: "Only people on the plan can save the reel." };
+  if (!path.startsWith(`${plan.id}/reel.`)) return { error: "Bad reel path." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("episodes").update({ video_path: path }).eq("id", episodeId).eq("plan_id", plan.id);
+  if (error) return { error: "Couldn't keep the reel for next time." };
+  revalidatePath(`/p/${slug}/episode`);
+  return { error: null };
 }

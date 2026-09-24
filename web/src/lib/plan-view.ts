@@ -3,7 +3,12 @@ import { whenPhrase } from "@/lib/time";
 export type Rsvp = "in" | "maybe" | "out";
 export type PlanStatus = "open" | "happening" | "ended" | "cancelled";
 
-export type Person = { id: string; first_name: string; photo_path: string | null };
+export type Person = {
+  id: string;
+  first_name: string;
+  photo_path: string | null;
+  photo_url?: string | null;
+};
 
 // Shape returned by public.get_plan_by_slug().
 export type PlanView = {
@@ -20,7 +25,14 @@ export type PlanView = {
   my_rsvp: Rsvp | null;
   am_removed: boolean;
   in_count: number;
-  participants: { id: string; user_id: string; first_name: string; photo_path: string | null; rsvp: Rsvp }[];
+  participants: {
+    id: string;
+    user_id: string;
+    first_name: string;
+    photo_path: string | null;
+    photo_url?: string | null;
+    rsvp: Rsvp;
+  }[];
   reclaimable_guests: { id: string; first_name: string; rsvp: Rsvp }[];
 };
 

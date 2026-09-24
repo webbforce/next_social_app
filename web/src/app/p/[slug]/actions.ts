@@ -29,7 +29,7 @@ const RSVP_ERRORS: Record<string, string> = {
 export async function submitRsvp(
   slug: string,
   rsvp: Rsvp,
-  guest: { firstName: string; confirmed18: boolean } | null,
+  guest: { firstName: string; confirmed18: boolean; photoPath?: string | null } | null,
 ): Promise<Result> {
   if (!["in", "maybe", "out"].includes(rsvp)) return { error: "Pick in, maybe or can't." };
 
@@ -48,14 +48,22 @@ export async function submitRsvp(
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
+    const photoPath = guest.photoPath?.trim() || null;
     const { error } = existing
       ? await supabase
           .from("profiles")
-          .update({ first_name: firstName, is_18_plus_confirmed: true })
+          .update({
+            first_name: firstName,
+            is_18_plus_confirmed: true,
+            ...(photoPath ? { photo_path: photoPath } : {}),
+          })
           .eq("id", user.id)
-      : await supabase
-          .from("profiles")
-          .insert({ id: user.id, first_name: firstName, is_18_plus_confirmed: true });
+      : await supabase.from("profiles").insert({
+          id: user.id,
+          first_name: firstName,
+          is_18_plus_confirmed: true,
+          ...(photoPath ? { photo_path: photoPath } : {}),
+        });
     if (error) return { error: "Couldn't save your name. Try again." };
   }
 

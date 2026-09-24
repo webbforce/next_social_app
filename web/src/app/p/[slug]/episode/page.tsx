@@ -60,10 +60,14 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
   const usableCount = moments.filter((m) => !excludedAny.has(m.id)).length;
   const stale = episode?.status === "ready" && episode.highlights.photos !== usableCount;
 
-  const { data: signed } =
+  const [{ data: signed }, { data: signedVideo }] = await Promise.all([
     episode?.card_path && episode.status === "ready"
-      ? await supabase.storage.from("episodes").createSignedUrl(episode.card_path, 3600)
-      : { data: null };
+      ? supabase.storage.from("episodes").createSignedUrl(episode.card_path, 3600)
+      : Promise.resolve({ data: null }),
+    episode?.video_path && episode.status === "ready"
+      ? supabase.storage.from("episodes").createSignedUrl(episode.video_path, 3600)
+      : Promise.resolve({ data: null }),
+  ]);
 
   const headline = `${plan.host.first_name} was up for ${plan.activity}`;
   const reelSlides =
@@ -148,6 +152,7 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
               ? { slides: reelSlides, hostName: plan.host.first_name, activity: plan.activity }
               : null
           }
+          videoUrl={showReel ? (signedVideo?.signedUrl ?? null) : null}
         />
       )}
 

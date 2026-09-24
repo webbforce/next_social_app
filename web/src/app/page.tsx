@@ -29,7 +29,10 @@ export default async function Home() {
           </Link>
         )}
         {isHost && (
-          <div className="pt-2 text-center">
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <Link href="/reports" className="text-sm text-stone-500 underline">
+              Reports
+            </Link>
             <SignOutButton />
           </div>
         )}
