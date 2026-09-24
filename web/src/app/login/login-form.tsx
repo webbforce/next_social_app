@@ -7,9 +7,16 @@ import { recordSignupCompleted, recordSignupStarted } from "./actions";
 
 type Step = "phone" | "code" | "profile";
 
-// Accepts "06 1234 5678", "0031 6…", "+31 6…"; numbers without a country code are assumed Dutch.
+const PHONE_HINT = "Dutch mobiles are 06 plus 8 digits, like 06 1234 5678.";
+
 function otpError(message: string) {
   const text = message.toLowerCase();
+  if (
+    (text.includes("invalid") && text.includes("phone")) ||
+    text.includes("not a valid phone")
+  ) {
+    return PHONE_HINT;
+  }
   if (
     text.includes("unsupported phone") ||
     text.includes("phone provider") ||
@@ -17,17 +24,27 @@ function otpError(message: string) {
     text.includes("twilio") ||
     (text.includes("sending") && text.includes("sms"))
   ) {
-    return "We couldn't text that number yet. Test phones still work; real SMS is turned on in Supabase under Authentication → Providers → Phone.";
+    return "We couldn't send a code to that number.";
   }
   return message;
 }
 
-function normalizePhone(raw: string) {
-  let phone = raw.replace(/[\s\-().]/g, "");
-  if (phone.startsWith("00")) phone = `+${phone.slice(2)}`;
-  else if (phone.startsWith("0")) phone = `+31${phone.slice(1)}`;
-  else if (!phone.startsWith("+")) phone = `+${phone}`;
-  return /^\+\d{8,15}$/.test(phone) ? phone : null;
+// 06 1234 5678, 0031 6…, +31 6… — Dutch mobiles are +316 and eight more digits.
+function parsePhone(raw: string): { ok: true; phone: string } | { ok: false; error: string } {
+  const digits = raw.replace(/[\s\-().]/g, "");
+  let phone: string;
+  if (digits.startsWith("00")) phone = `+${digits.slice(2)}`;
+  else if (digits.startsWith("+")) phone = digits;
+  else if (/^06\d{8}$/.test(digits)) phone = `+31${digits.slice(1)}`;
+  else if (digits.startsWith("31") && digits.length >= 11) phone = `+${digits}`;
+  else if (digits.startsWith("0")) phone = `+31${digits.slice(1)}`;
+  else if (/^\d{8,15}$/.test(digits)) phone = `+${digits}`;
+  else return { ok: false, error: PHONE_HINT };
+
+  if (phone.startsWith("+31")) {
+    return /^\+316\d{8}$/.test(phone) ? { ok: true, phone } : { ok: false, error: PHONE_HINT };
+  }
+  return /^\+\d{8,15}$/.test(phone) ? { ok: true, phone } : { ok: false, error: PHONE_HINT };
 }
 
 export function LoginForm({
@@ -58,11 +75,12 @@ export function LoginForm({
 
   function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    const normalized = normalizePhone(phone);
-    if (!normalized) {
-      setError("That doesn't look like a phone number. Try something like 06 1234 5678.");
+    const parsed = parsePhone(phone);
+    if (!parsed.ok) {
+      setError(parsed.error);
       return;
     }
+    const normalized = parsed.phone;
     setError(null);
     startTransition(async () => {
       const {
