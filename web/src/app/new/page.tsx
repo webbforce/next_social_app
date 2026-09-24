@@ -8,6 +8,7 @@ import { BrandLink } from "@/components/brand";
 import { DeleteAccountButton } from "@/app/delete-account-button";
 import { ProfilePhotoButton } from "@/app/profile-photo-button";
 import { SignOutButton } from "@/app/sign-out-button";
+import { FirstRun } from "./onboarding";
 import { PlanForm } from "./plan-form";
 
 export const metadata: Metadata = { title: "Make a plan" };
@@ -37,6 +38,11 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
 
   const initialTag = isActivityTag(tagValue) ? tagValue : null;
   const source = fromValue === "free" ? "free_page" : "web_create";
+  const { count } = await supabase
+    .from("plans")
+    .select("id", { count: "exact", head: true })
+    .eq("host_id", user.id);
+  const firstPlan = (count ?? 0) === 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6 py-10">
@@ -47,12 +53,23 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
           <SignOutButton />
         </div>
       </div>
-      <h1 className="text-3xl font-bold tracking-tight">What are you up for?</h1>
-      <PlanForm initialTag={initialTag} source={source} />
-      {profile && !profile.photo_path && <ProfilePhotoButton />}
-      <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">
-        Or say you&apos;re free tonight
-      </Link>
+      {firstPlan ? (
+        <FirstRun
+          userId={user.id}
+          initialTag={initialTag}
+          source={source}
+          showPhoto={!profile.photo_path}
+        />
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold tracking-tight">What are you up for?</h1>
+          <PlanForm initialTag={initialTag} source={source} />
+          {!profile.photo_path && <ProfilePhotoButton />}
+          <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">
+            Or say you&apos;re free tonight
+          </Link>
+        </>
+      )}
     </main>
   );
 }

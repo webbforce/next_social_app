@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full bg-stone-50 text-stone-900">
+      <body className="min-h-full overflow-x-clip bg-stone-50 text-stone-900">
         <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-10">{children}</div>
       </body>
     </html>
