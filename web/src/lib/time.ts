@@ -31,6 +31,21 @@ export function formatTime(d: Date) {
   return timeFormat.format(d);
 }
 
+// Value for <input type="datetime-local"> in the campus time zone.
+export function toDatetimeLocalValue(d: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const n = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
+  return `${n("year")}-${n("month")}-${n("day")}T${n("hour")}:${n("minute")}`;
+}
+
 function dayLabel(d: Date, now: Date) {
   if (dayKey(d) === dayKey(now)) return "Today";
   if (dayKey(d) === dayKey(new Date(now.getTime() + DAY_MS))) return "Tomorrow";

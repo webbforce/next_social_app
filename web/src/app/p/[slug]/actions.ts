@@ -5,8 +5,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { inAppBrowser, track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
-import type { Rsvp } from "@/lib/plan";
+import { getPlanBySlug, getPlanUpdates, type Rsvp } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/server";
+import { formatRange } from "@/lib/time";
 
 type Result = { error: string | null };
 
@@ -106,6 +107,92 @@ export async function removeParticipant(participantId: string, slug: string): Pr
   if (error) return { error: "Couldn't remove them. Try again." };
   revalidatePath(`/p/${slug}`);
   return { error: null };
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+
+export async function updatePlan(planId: string, slug: string, formData: FormData): Promise<Result> {
+  const user = await getCurrentUser();
+  if (!user || user.isAnonymous) return { error: "Sign in as the host to edit." };
+
+  const plan = await getPlanBySlug(slug);
+  if (!plan || plan.id !== planId) return { error: "This plan doesn't exist anymore." };
+  if (!plan.is_host) return { error: "Only the host can edit this plan." };
+  if (plan.status !== "open" && plan.status !== "happening") {
+    return { error: "This plan is over, so the time and place stay as they are." };
+  }
+
+  const startsAt = new Date(String(formData.get("starts_at")));
+  const endsAt = new Date(String(formData.get("ends_at")));
+  const place = String(formData.get("place") ?? "").trim();
+
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+    return { error: "Pick a start time." };
+  }
+  if (startsAt.getTime() < Date.now() - HOUR_MS) return { error: "That start time has passed." };
+  if (startsAt.getTime() > Date.now() + 60 * 24 * HOUR_MS) {
+    return { error: "Plans can be at most two months ahead." };
+  }
+  if (endsAt <= startsAt || endsAt.getTime() - startsAt.getTime() > 24 * HOUR_MS) {
+    return { error: "A plan can last up to 24 hours." };
+  }
+
+  const isUrl = /^https?:\/\/\S+$/i.test(place);
+  if (isUrl ? place.length > 500 : place.length > 120) {
+    return { error: "That place is too long." };
+  }
+
+  const placeText = place && !isUrl ? place : null;
+  const placeUrl = isUrl ? place : null;
+  const atMinute = (d: Date) => Math.floor(d.getTime() / 60_000);
+  const timeChanged =
+    atMinute(new Date(plan.starts_at)) !== atMinute(startsAt) ||
+    atMinute(new Date(plan.ends_at)) !== atMinute(endsAt);
+  const placeChanged = plan.place_text !== placeText || plan.place_url !== placeUrl;
+  if (!timeChanged && !placeChanged) return { error: null };
+
+  const nextStarts = timeChanged ? startsAt.toISOString() : plan.starts_at;
+  const nextEnds = timeChanged ? endsAt.toISOString() : plan.ends_at;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("plans")
+    .update({
+      starts_at: nextStarts,
+      ends_at: nextEnds,
+      place_text: placeText,
+      place_url: placeUrl,
+    })
+    .eq("id", planId)
+    .eq("host_id", user.id)
+    .is("cancelled_at", null)
+    .select("id");
+  if (error || !data?.length) return { error: "Couldn't save those changes. Try again." };
+
+  const range = formatRange(new Date(nextStarts), new Date(nextEnds));
+  const notice = [
+    timeChanged ? `now ${range}` : null,
+    placeChanged ? (placeText ? `now at ${placeText}` : placeUrl ? "updated the location" : "removed the place") : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  await supabase.from("plan_updates").insert({
+    plan_id: planId,
+    author_id: user.id,
+    body: `Updated: ${notice}`.slice(0, 280),
+  });
+
+  track("plan_edited", user.id, { plan_id: planId, time_changed: timeChanged, place_changed: placeChanged });
+  revalidatePath(`/p/${slug}`);
+  return { error: null };
+}
+
+export async function refreshPlanSnapshot(slug: string) {
+  const plan = await getPlanBySlug(slug);
+  if (!plan) return null;
+  const isMember = plan.is_host || plan.my_rsvp !== null;
+  return { plan, updates: isMember ? await getPlanUpdates(plan.id) : null };
 }
 
 export async function cancelPlan(planId: string, slug: string): Promise<Result> {

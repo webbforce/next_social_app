@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { PlanView } from "@/lib/plan-view";
 import { cancelPlan, removeParticipant, resetShareLink } from "./actions";
+import { EditPlanForm } from "./edit-plan";
 
 export function RemoveButton({ participantId, name, slug }: { participantId: string; name: string; slug: string }) {
   const [pending, startTransition] = useTransition();
@@ -23,8 +25,9 @@ export function RemoveButton({ participantId, name, slug }: { participantId: str
   );
 }
 
-export function HostTools({ planId, slug, canCancel }: { planId: string; slug: string; canCancel: boolean }) {
+export function HostTools({ plan, slug }: { plan: PlanView; slug: string }) {
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -34,27 +37,34 @@ export function HostTools({ planId, slug, canCancel }: { planId: string; slug: s
           type="button"
           className="btn-secondary h-10 text-sm"
           disabled={pending}
+          onClick={() => setEditing((open) => !open)}
+        >
+          {editing ? "Close edit" : "Edit time or place"}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary h-10 text-sm"
+          disabled={pending}
           onClick={() => {
             if (!confirm("Make a new link? The current link will stop working for anyone who hasn't joined yet.")) return;
-            startTransition(async () => setError((await resetShareLink(planId)).error));
+            startTransition(async () => setError((await resetShareLink(plan.id)).error));
           }}
         >
           Reset link
         </button>
-        {canCancel && (
-          <button
-            type="button"
-            className="btn-secondary h-10 text-sm text-red-700"
-            disabled={pending}
-            onClick={() => {
-              if (!confirm("Cancel this plan? Everyone with the link will see it's off.")) return;
-              startTransition(async () => setError((await cancelPlan(planId, slug)).error));
-            }}
-          >
-            Cancel plan
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn-secondary h-10 text-sm text-red-700"
+          disabled={pending}
+          onClick={() => {
+            if (!confirm("Cancel this plan? Everyone with the link will see it's off.")) return;
+            startTransition(async () => setError((await cancelPlan(plan.id, slug)).error));
+          }}
+        >
+          Cancel plan
+        </button>
       </div>
+      {editing && <EditPlanForm plan={plan} slug={slug} onSaved={() => setEditing(false)} />}
       {error && <p className="text-sm text-red-700">{error}</p>}
     </section>
   );
