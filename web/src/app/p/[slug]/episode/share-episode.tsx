@@ -9,12 +9,14 @@ export function ShareEpisode({
   cardUrl,
   headline,
   publicSlug,
+  hasReel = false,
 }: {
   episodeId: string;
   slug: string;
   cardUrl: string;
   headline: string;
   publicSlug: string | null;
+  hasReel?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [link, setLink] = useState(publicSlug);
@@ -79,6 +81,9 @@ export function ShareEpisode({
         </button>
       </div>
       <p className="text-xs text-stone-500">
+        {hasReel
+          ? "Share and download send the still card. The reel plays on this page. "
+          : ""}
         The public link is off until someone here creates one. Leave out photos you appear in first.
       </p>
       {error && <p className="text-sm text-red-700">{error}</p>}

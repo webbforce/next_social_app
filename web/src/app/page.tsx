@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/brand";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const user = await getCurrentUser();
+  const isHost = !!user && !user.isAnonymous;
+
   return (
     <main className="flex flex-1 flex-col justify-center gap-8 py-16">
       <BrandMark size={72} />
@@ -12,9 +18,16 @@ export default function Home() {
         Friends join from the link, no app or account needed. Afterwards, everyone&apos;s photos
         become one recap worth posting.
       </p>
-      <Link href="/new" className="btn-primary w-full">
-        Make a plan
-      </Link>
+      <div className="flex flex-col gap-3">
+        <Link href="/new" className="btn-primary w-full">
+          Make a plan
+        </Link>
+        {isHost && (
+          <Link href="/free" className="btn-secondary w-full">
+            Who&apos;s free
+          </Link>
+        )}
+      </div>
     </main>
   );
 }

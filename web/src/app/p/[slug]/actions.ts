@@ -17,6 +17,11 @@ const RSVP_ERRORS: Record<string, string> = {
   host_cannot_rsvp: "You're the host of this plan.",
   plan_closed: "This plan is over, so RSVPs are closed.",
   removed_by_host: "The host removed you from this plan.",
+  not_a_guest: "Sign out and open the link again to join as a guest.",
+  plan_cancelled: "This plan was cancelled.",
+  already_on_plan: "You're already on this plan.",
+  guest_not_found: "That name isn't on this plan anymore.",
+  not_a_guest_row: "That person already has an account.",
 };
 
 // The browser signs guests in anonymously first, so Supabase's per-IP limit applies to the guest, not our server.
@@ -57,6 +62,23 @@ export async function submitRsvp(
   if (error) return { error: RSVP_ERRORS[error.message] ?? "Couldn't save your RSVP. Try again." };
 
   track("rsvp_submitted", user.id, { slug, rsvp, is_guest: user.isAnonymous });
+  revalidatePath(`/p/${slug}`);
+  return { error: null };
+}
+
+export async function reclaimGuest(slug: string, participantId: string): Promise<Result> {
+  const user = await getCurrentUser();
+  if (!user) return { error: RSVP_ERRORS.not_signed_in };
+  if (!user.isAnonymous) return { error: RSVP_ERRORS.not_a_guest };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reclaim_guest_on_plan", {
+    p_slug: slug,
+    p_participant_id: participantId,
+  });
+  if (error) return { error: RSVP_ERRORS[error.message] ?? "Couldn't find you on this plan. Try again." };
+
+  track("guest_rejoined_by_name", user.id, { slug, participant_id: participantId });
   revalidatePath(`/p/${slug}`);
   return { error: null };
 }

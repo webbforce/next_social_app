@@ -46,11 +46,17 @@ function Chip({
   );
 }
 
-export function PlanForm() {
+export function PlanForm({
+  initialTag = null,
+  source = "web_create",
+}: {
+  initialTag?: ActivityTag | null;
+  source?: "web_create" | "free_page";
+}) {
   const [state, dispatch, pending] = useActionState<CreatePlanState, FormData>(createPlan, {
     error: null,
   });
-  const [tag, setTag] = useState<ActivityTag | null>(null);
+  const [tag, setTag] = useState<ActivityTag | null>(initialTag);
   const [customActivity, setCustomActivity] = useState("");
   const [startMode, setStartMode] = useState<StartMode>("now");
   const [todayTime, setTodayTime] = useState(nextFullHour);
@@ -78,6 +84,7 @@ export function PlanForm() {
     formData.set("starts_at", start.toISOString());
     formData.set("ends_at", new Date(start.getTime() + duration * 3_600_000).toISOString());
     formData.set("place", place.trim());
+    formData.set("source", source);
     dispatch(formData);
   }
 

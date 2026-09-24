@@ -26,13 +26,17 @@ export type PlanView = {
   am_removed: boolean;
   in_count: number;
   participants: { id: string; user_id: string; first_name: string; photo_path: string | null; rsvp: Rsvp }[];
+  reclaimable_guests: { id: string; first_name: string; rsvp: Rsvp }[];
 };
 
 export const getPlanBySlug = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_plan_by_slug", { p_slug: slug });
   if (error) throw new Error(`get_plan_by_slug failed: ${error.message}`);
-  return data as PlanView | null;
+  if (!data) return null;
+  const plan = data as PlanView;
+  plan.reclaimable_guests ??= [];
+  return plan;
 });
 
 // Link preview title, e.g. "Tom is up for drinks tonight at 21:00 · 7 people are in".
@@ -84,6 +88,7 @@ export type EpisodeView = {
   template: string;
   status: "pending" | "rendering" | "ready" | "failed";
   card_path: string | null;
+  music_track: string | null;
   highlights: EpisodeHighlights;
   public_share_slug: string | null;
   ready_at: string | null;
@@ -94,7 +99,7 @@ export const getPlanEpisode = cache(async (planId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("episodes")
-    .select("id, format, template, status, card_path, highlights, public_share_slug, ready_at, error")
+    .select("id, format, template, status, card_path, music_track, highlights, public_share_slug, ready_at, error")
     .eq("plan_id", planId)
     .maybeSingle();
   return (data as EpisodeView | null) ?? null;

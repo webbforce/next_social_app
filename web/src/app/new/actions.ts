@@ -39,6 +39,8 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
     return { error: "That place is too long." };
   }
 
+  const source = formData.get("source") === "free_page" ? "free_page" : "web_create";
+
   const supabase = await createClient();
 
   const [{ count: previousPlans }, { count: guestRsvps }] = await Promise.all([
@@ -59,7 +61,7 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
       ends_at: endsAt.toISOString(),
       place_text: place && !isUrl ? place : null,
       place_url: isUrl ? place : null,
-      source: "web_create",
+      source,
     })
     .select("id, share_slug")
     .single();
@@ -68,7 +70,7 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
 
   track("plan_created", user.id, {
     plan_id: plan.id,
-    source: "web_create",
+    source,
     activity: isActivityTag(tag) ? tag : "free_text",
     is_first_plan: (previousPlans ?? 0) === 0,
     hosted_before_as_guest: (guestRsvps ?? 0) > 0,

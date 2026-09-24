@@ -64,3 +64,40 @@ export function formatRange(startsAt: Date, endsAt: Date, now = new Date()) {
   }
   return `${startDay}, ${formatTime(startsAt)} – ${dayLabel(endsAt, now)}, ${formatTime(endsAt)}`;
 }
+
+function tzOffsetMs(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const n = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  return (
+    Date.UTC(n("year"), n("month") - 1, n("day"), n("hour"), n("minute"), n("second")) - date.getTime()
+  );
+}
+
+function wallTime(year: number, month: number, day: number, hour: number) {
+  const utcGuess = Date.UTC(year, month - 1, day, hour, 0, 0);
+  return new Date(utcGuess - tzOffsetMs(new Date(utcGuess)));
+}
+
+// "I'm free tonight" lasts until 04:00 campus time — today if it's still before 04:00, otherwise tomorrow.
+export function nextFourAm(now = new Date()) {
+  const [year, month, day] = dayKey(now).split("-").map(Number);
+  const todayAtFour = wallTime(year, month, day, 4);
+  if (now.getTime() < todayAtFour.getTime()) return todayAtFour;
+  const nextDay = amsterdamYmd(new Date(wallTime(year, month, day, 12).getTime() + DAY_MS));
+  return wallTime(nextDay.year, nextDay.month, nextDay.day, 4);
+}
+
+function amsterdamYmd(d: Date) {
+  const [year, month, day] = dayKey(d).split("-").map(Number);
+  return { year, month, day };
+}

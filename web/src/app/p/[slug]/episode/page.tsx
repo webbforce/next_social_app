@@ -3,12 +3,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BrandLink } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
-import { statsLine } from "@/lib/episode";
+import { REEL_PHOTO_MIN, statsLine } from "@/lib/episode";
 import { getPlanBySlug, getPlanEpisode, getPlanMoments } from "@/lib/plan";
+import { defaultTrack, isTrackId } from "@/lib/tracks";
 import { createClient } from "@/lib/supabase/server";
 import { ExcludeGrid } from "./exclude-grid";
 import { MakeEpisodeButton } from "./make-button";
+import { ReelPlayer } from "./reel-player";
 import { ShareEpisode } from "./share-episode";
+import { TrackPicker } from "./track-picker";
 import { StartPlanCta } from "./start-plan-cta";
 import { EpisodeViewTracker } from "./view-tracker";
 
@@ -62,6 +65,17 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
       : { data: null };
 
   const headline = `${plan.host.first_name} was up for ${plan.activity}`;
+  const reelSlides =
+    episode?.format === "reel"
+      ? (episode.highlights.clips ?? [])
+          .map((clip) => {
+            const moment = namedMoments.find((m) => m.id === clip.id && !excludedAny.has(m.id));
+            return moment?.url ? { url: moment.url, ms: clip.ms } : null;
+          })
+          .filter((slide): slide is { url: string; ms: number } => !!slide)
+      : [];
+  const showReel = reelSlides.length >= REEL_PHOTO_MIN;
+  const trackId = isTrackId(episode?.music_track) ? episode.music_track : defaultTrack(episode?.template ?? "");
 
   return (
     <main className="flex flex-1 flex-col gap-5 py-6">
@@ -77,7 +91,19 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
         {episode?.status === "ready" && <p className="text-stone-600">{statsLine(episode.highlights)}</p>}
       </header>
 
-      {episode?.status === "ready" && signed?.signedUrl && (
+      {episode?.status === "ready" && showReel && (
+        <>
+          <ReelPlayer
+            slides={reelSlides}
+            hostName={plan.host.first_name}
+            activity={plan.activity}
+            trackId={trackId}
+          />
+          <TrackPicker slug={slug} episodeId={episode.id} current={trackId} />
+        </>
+      )}
+
+      {episode?.status === "ready" && signed?.signedUrl && !showReel && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={signed.signedUrl}
@@ -116,6 +142,7 @@ export default async function EpisodePage(props: PageProps<"/p/[slug]/episode">)
           cardUrl={signed.signedUrl}
           headline={headline}
           publicSlug={episode.public_share_slug}
+          hasReel={showReel}
         />
       )}
 

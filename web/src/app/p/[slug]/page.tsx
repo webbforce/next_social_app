@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { after } from "next/server";
 import { notFound } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { BrandLink } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
+import { isAutoEpisodeDue, renderEpisodeForPlan } from "@/lib/episode-render";
 import { isPhotoWindowOpen } from "@/lib/moments";
 import { getPlanBySlug, getPlanEpisode, getPlanMoments, planHeadline, type PlanStatus } from "@/lib/plan";
 import { MakeEpisodeButton } from "./episode/make-button";
@@ -70,8 +72,20 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
     isInsider ? getPlanEpisode(plan.id) : Promise.resolve(null),
   ]);
 
+  if (
+    isAutoEpisodeDue(plan.ends_at, plan.status) &&
+    moments.length > 0 &&
+    episode?.status !== "ready" &&
+    episode?.status !== "rendering"
+  ) {
+    after(() => renderEpisodeForPlan(slug, { actorUserId: null, replaceReady: false }));
+  }
+
   const going = plan.participants.filter((p) => p.rsvp === "in");
   const maybe = plan.participants.filter((p) => p.rsvp === "maybe");
+  const reclaimableGuests = plan.reclaimable_guests ?? [];
+  const needsProfile = !profile?.is_18_plus_confirmed;
+  const canReclaim = !plan.my_rsvp && needsProfile && reclaimableGuests.length > 0;
   const statusLabel = STATUS_LABEL[plan.status];
   const headline = planHeadline(plan);
 
@@ -121,12 +135,14 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
         <p className="card text-stone-600">The host removed you from this plan.</p>
       )}
 
-      {!plan.is_host && !plan.am_removed && isLive && (
+      {!plan.is_host && !plan.am_removed && (isLive || canReclaim) && (
         <RsvpPanel
           slug={slug}
           current={plan.my_rsvp}
           hasSession={!!user}
-          needsProfile={!profile?.is_18_plus_confirmed}
+          needsProfile={needsProfile}
+          reclaimableGuests={reclaimableGuests}
+          allowNewRsvp={isLive}
         />
       )}
 
@@ -207,6 +223,10 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
           <span className="font-semibold">See the episode →</span>
           <span className="text-stone-600">The recap from this plan.</span>
         </Link>
+      )}
+
+      {isInsider && episode?.status === "rendering" && (
+        <p className="card text-stone-600">Making the episode…</p>
       )}
 
       {plan.is_host && moments.length > 0 && episode?.status !== "ready" && (

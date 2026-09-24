@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import type { Rsvp } from "@/lib/plan";
 import { createClient } from "@/lib/supabase/client";
-import { submitRsvp } from "./actions";
+import { reclaimGuest, submitRsvp } from "./actions";
 
 const OPTIONS: { value: Rsvp; label: string }[] = [
   { value: "in", label: "I'm in" },
@@ -11,22 +11,42 @@ const OPTIONS: { value: Rsvp; label: string }[] = [
   { value: "out", label: "Can't" },
 ];
 
+type Guest = { id: string; first_name: string };
+
 export function RsvpPanel({
   slug,
   current,
   hasSession,
   needsProfile,
+  reclaimableGuests,
+  allowNewRsvp,
 }: {
   slug: string;
   current: Rsvp | null;
   hasSession: boolean;
   needsProfile: boolean;
+  reclaimableGuests: Guest[];
+  allowNewRsvp: boolean;
 }) {
   const [firstName, setFirstName] = useState("");
   const [confirmed18, setConfirmed18] = useState(false);
+  const [someoneNew, setSomeoneNew] = useState(reclaimableGuests.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [pendingChoice, setPendingChoice] = useState<Rsvp | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const showReclaim = needsProfile && !current && reclaimableGuests.length > 0 && !someoneNew;
+  const showNameForm = needsProfile && allowNewRsvp && (someoneNew || reclaimableGuests.length === 0);
+
+  async function ensureGuestSession() {
+    if (hasSession) return true;
+    const { error: signInError } = await createClient().auth.signInAnonymously();
+    if (signInError) {
+      setError("Couldn't join right now. Try again in a minute.");
+      return false;
+    }
+    return true;
+  }
 
   function choose(rsvp: Rsvp) {
     if (needsProfile && !firstName.trim()) return setError("Add your first name.");
@@ -35,13 +55,7 @@ export function RsvpPanel({
     setPendingChoice(rsvp);
 
     startTransition(async () => {
-      if (!hasSession) {
-        const { error } = await createClient().auth.signInAnonymously();
-        if (error) {
-          setError("Couldn't join right now. Try again in a minute.");
-          return;
-        }
-      }
+      if (!(await ensureGuestSession())) return;
       const result = await submitRsvp(
         slug,
         rsvp,
@@ -51,13 +65,68 @@ export function RsvpPanel({
     });
   }
 
+  function pickName(guest: Guest) {
+    setError(null);
+    startTransition(async () => {
+      if (!(await ensureGuestSession())) return;
+      const result = await reclaimGuest(slug, guest.id);
+      if (result.error) setError(result.error);
+    });
+  }
+
   return (
     <section className="card flex flex-col gap-4">
       <h2 className="text-lg font-semibold">
-        {current ? "Your answer" : "Are you in?"}
+        {current ? "Your answer" : showReclaim ? "Is this you?" : "Are you in?"}
       </h2>
-      {needsProfile && (
+
+      {showReclaim && (
         <div className="flex flex-col gap-3">
+          <p className="text-sm text-stone-600">
+            If you already joined from this link, pick your name. WhatsApp sometimes forgets you.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {reclaimableGuests.map((guest) => (
+              <button
+                key={guest.id}
+                type="button"
+                onClick={() => pickName(guest)}
+                disabled={pending}
+                className="btn-secondary px-4"
+              >
+                {guest.first_name}
+              </button>
+            ))}
+          </div>
+          {allowNewRsvp && (
+            <button
+              type="button"
+              onClick={() => {
+                setSomeoneNew(true);
+                setError(null);
+              }}
+              className="text-left text-sm font-medium text-stone-600 underline"
+            >
+              No, I&apos;m someone new
+            </button>
+          )}
+        </div>
+      )}
+
+      {showNameForm && (
+        <div className="flex flex-col gap-3">
+          {reclaimableGuests.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSomeoneNew(false);
+                setError(null);
+              }}
+              className="text-left text-sm font-medium text-stone-600 underline"
+            >
+              Is this you?
+            </button>
+          )}
           <input
             className="input"
             placeholder="Your first name"
@@ -77,24 +146,28 @@ export function RsvpPanel({
           </label>
         </div>
       )}
-      <div className="grid grid-cols-3 gap-2">
-        {OPTIONS.map((o) => {
-          const selected = (pending ? pendingChoice : current) === o.value;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => choose(o.value)}
-              disabled={pending}
-              aria-pressed={selected}
-              className={selected ? "btn-primary px-2" : "btn-secondary px-2"}
-            >
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
-      {needsProfile && (
+
+      {allowNewRsvp && !showReclaim && (
+        <div className="grid grid-cols-3 gap-2">
+          {OPTIONS.map((o) => {
+            const selected = (pending ? pendingChoice : current) === o.value;
+            return (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => choose(o.value)}
+                disabled={pending}
+                aria-pressed={selected}
+                className={selected ? "btn-primary px-2" : "btn-secondary px-2"}
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {showNameForm && (
         <p className="text-xs text-stone-500">No app or account needed. Only people with the link see your name.</p>
       )}
       {error && <p className="text-sm text-red-700">{error}</p>}
