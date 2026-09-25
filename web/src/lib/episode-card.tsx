@@ -26,17 +26,17 @@ function filmFrame(photo: EpisodePhoto) {
   return (
     <div
       key={photo.id}
-      style={{ display: "flex", alignItems: "center", gap: 12, background: "#292524", padding: 12 }}
+      style={{ display: "flex", alignItems: "center", gap: 12, background: "#0B0B0B", padding: 12 }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {[0, 1, 2].map((n) => (
-          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#0c0a09" }} />
+          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#FAFAF8" }} />
         ))}
       </div>
       <img src={photo.url} alt="" width={760} height={280} style={{ objectFit: "cover" }} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {[0, 1, 2].map((n) => (
-          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#0c0a09" }} />
+          <div key={n} style={{ width: 22, height: 16, borderRadius: 3, background: "#FAFAF8" }} />
         ))}
       </div>
     </div>
@@ -69,9 +69,9 @@ export async function renderEpisodeCard(input: {
   link: string;
 }) {
   const dark = input.template === "bold" || input.template === "filmstrip";
-  const bg = input.template === "polaroid" ? "#f3ead7" : dark ? "#0c0a09" : "#fafaf9";
-  const fg = dark ? "#fafaf9" : "#1c1917";
-  const muted = dark ? "#a8a29e" : "#57534e";
+  const bg = dark ? "#0B0B0B" : "#FAFAF8";
+  const fg = dark ? "#FAFAF8" : "#0B0B0B";
+  const muted = dark ? "#a3a3a3" : "#525252";
   const { cell } = grid(input.photos);
   const shown = input.photos.slice(0, input.template === "filmstrip" ? 3 : input.template === "polaroid" ? 4 : 9);
 
@@ -91,7 +91,7 @@ export async function renderEpisodeCard(input: {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <img src={logoSrc} alt="" width={72} height={72} />
-          <div style={{ fontSize: 36, fontWeight: 700, letterSpacing: 4, color: muted }}>UPFOR</div>
+          <div style={{ fontSize: 36, fontWeight: 700, color: fg }}>upFor</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -131,7 +131,7 @@ export async function renderEpisodeCard(input: {
                 {line}
               </div>
             ))}
-          <div style={{ marginTop: 16, fontSize: 28, color: muted }}>{`made with Upfor · ${input.link}`}</div>
+          <div style={{ marginTop: 16, fontSize: 28, color: muted }}>{`made with upFor · ${input.link}`}</div>
         </div>
       </div>
     ),

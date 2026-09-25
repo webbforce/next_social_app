@@ -27,8 +27,9 @@ export default async function Home() {
     return (
       <main className="flex flex-1 flex-col justify-center gap-8 py-16">
         <BrandMark size={72} />
-        <h1 className="text-4xl leading-tight font-bold tracking-tight">
-          Make a plan in 30 seconds. Drop the link in your group chat.
+        <h1 className="font-display text-4xl leading-tight font-bold tracking-tight">
+          <span className="underline decoration-up decoration-[5px] underline-offset-[6px]">Make a plan</span> in 30
+          seconds. Drop the link in your group chat.
         </h1>
         <p className="text-lg text-stone-600">
           Friends join from the link, no app or account needed. Afterwards, everyone&apos;s photos
@@ -36,6 +37,9 @@ export default async function Home() {
         </p>
         <Link href="/new" className="btn-primary w-full">
           Make a plan
+        </Link>
+        <Link href="/privacy" className="text-center text-sm text-stone-500 underline">
+          Privacy
         </Link>
       </main>
     );

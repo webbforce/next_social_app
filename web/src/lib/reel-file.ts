@@ -33,19 +33,19 @@ function drawEndCard(
   activity: string,
   link: string,
 ) {
-  ctx.fillStyle = "#0c0a09";
+  ctx.fillStyle = "#0B0B0B";
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   if (logo) {
     const size = 96;
     ctx.drawImage(logo, (WIDTH - size) / 2, HEIGHT / 2 - 220, size, size);
   }
   ctx.textAlign = "center";
-  ctx.fillStyle = "#a8a29e";
+  ctx.fillStyle = "#a3a3a3";
   ctx.font = "600 22px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("MADE WITH UPFOR", WIDTH / 2, HEIGHT / 2 - 130);
+  ctx.fillText("made with upFor", WIDTH / 2, HEIGHT / 2 - 130);
   ctx.font = "500 24px ui-sans-serif, system-ui, sans-serif";
   ctx.fillText(link, WIDTH / 2, HEIGHT / 2 - 88);
-  ctx.fillStyle = "#fafaf9";
+  ctx.fillStyle = "#FAFAF8";
   ctx.font = "700 42px ui-sans-serif, system-ui, sans-serif";
   const line = `${hostName} was up for ${activity}`;
   const words = line.split(" ");

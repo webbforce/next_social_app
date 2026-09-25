@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
+import { eraseDeletedAccount } from "@/lib/erasure";
 import { createClient } from "@/lib/supabase/server";
 
 export async function signOut() {
@@ -13,11 +14,17 @@ export async function signOut() {
 
 export async function deleteAccount(): Promise<{ error: string | null }> {
   const user = await getCurrentUser();
-  if (!user || user.isAnonymous) return { error: "Sign in with your phone first." };
+  if (!user) return { error: "Sign in first." };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("request_account_deletion");
   if (error) return { error: "Couldn't delete the account. Try again." };
+
+  try {
+    await eraseDeletedAccount(user.id);
+  } catch (err) {
+    console.error("erase account:", err);
+  }
 
   await supabase.auth.signOut();
   redirect("/");

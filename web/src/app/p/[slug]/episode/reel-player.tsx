@@ -54,14 +54,14 @@ export function ReelPlayer({
         void audio.current?.play();
         setIndex(0);
       }}
-      className="relative aspect-[9/16] w-full overflow-hidden rounded-3xl border border-stone-200 bg-stone-900 text-left"
+      className="relative aspect-[9/16] w-full overflow-hidden rounded-3xl border border-stone-200 bg-ink text-left"
       aria-label="Replay the reel"
     >
       {onEndCard ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-stone-950 px-8 text-center text-stone-50">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink px-8 text-center text-paper">
           <BrandMark size={48} />
-          <p className="text-sm tracking-[0.2em] text-stone-400">MADE WITH UPFOR</p>
-          <p className="text-sm text-stone-400">{link}</p>
+          <p className="text-sm font-medium text-paper/60">made with upFor</p>
+          <p className="text-sm text-paper/60">{link}</p>
           <p className="text-2xl font-bold">{hostName} was up for {activity}</p>
         </div>
       ) : (

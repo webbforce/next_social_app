@@ -126,9 +126,13 @@ export function PlaceField({
           <p className="text-sm text-stone-500">No venues found. Type the place instead.</p>
         )}
         <p className="text-xs text-stone-500">
-          Search by{" "}
+          Search is sent to{" "}
           <a href="https://www.openstreetmap.org/copyright" className="underline" target="_blank" rel="noreferrer">
             OpenStreetMap
+          </a>
+          . A shared pin opens in Apple Maps or Google Maps.{" "}
+          <a href="/privacy" className="underline">
+            Privacy
           </a>
         </p>
       </div>

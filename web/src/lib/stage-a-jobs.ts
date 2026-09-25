@@ -1,4 +1,5 @@
 import "server-only";
+import { eraseDeletedAccount } from "@/lib/erasure";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const PURGE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
@@ -20,6 +21,13 @@ async function purgeDeletedAccounts() {
 
   let purged = 0;
   for (const profile of due ?? []) {
+    try {
+      await eraseDeletedAccount(profile.id);
+    } catch (err) {
+      console.error("erase account:", err);
+      continue;
+    }
+
     const { data: moments } = await admin.from("moments").select("storage_path").eq("uploader_id", profile.id);
     const momentPaths = (moments ?? []).map((row) => row.storage_path).filter((path): path is string => !!path);
     if (momentPaths.length) {

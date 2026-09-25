@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { BrandLink } from "@/components/brand";
 import { DeleteAccountButton } from "@/app/delete-account-button";
+import { PrivacyLink } from "@/components/privacy-link";
 import { SignOutButton } from "@/app/sign-out-button";
 import { getCurrentUser } from "@/lib/auth";
 import { FREE_INTENT_LABEL, isFreeIntent, sharedFreeTag } from "@/lib/free";
@@ -77,6 +78,7 @@ export default async function FreePage() {
       <div className="flex items-center justify-between">
         <BrandLink />
         <div className="flex items-center gap-4">
+          <PrivacyLink />
           <DeleteAccountButton />
           <SignOutButton />
         </div>

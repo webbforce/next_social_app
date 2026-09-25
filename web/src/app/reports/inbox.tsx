@@ -13,8 +13,8 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 const STATUS_STYLE: Record<ReportRow["status"], string> = {
-  open: "bg-amber-100 text-amber-900",
-  actioned: "bg-lime-200 text-lime-900",
+  open: "bg-stone-200 text-ink",
+  actioned: "bg-up text-ink",
   dismissed: "bg-stone-200 text-stone-600",
 };
 
@@ -55,7 +55,7 @@ export function ReportsInbox({ reports }: { reports: ReportRow[] }) {
                 aria-selected={selected}
                 onClick={() => setFilter(item.id)}
                 className={`h-10 rounded-full border px-4 text-sm font-medium ${
-                  selected ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"
+                  selected ? "border-ink bg-ink text-paper" : "border-stone-300 bg-white"
                 }`}
               >
                 {item.label}

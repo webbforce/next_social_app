@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandLink } from "@/components/brand";
+import { StatusPill } from "@/components/status-pill";
 import { DeleteAccountButton } from "@/app/delete-account-button";
+import { PrivacyLink } from "@/components/privacy-link";
 import { SignOutButton } from "@/app/sign-out-button";
 import type { MyPlan } from "@/lib/plan-view";
 import { formatRange } from "@/lib/time";
@@ -39,7 +41,7 @@ function Onboarding({ onFinish }: { onFinish: (action: "skip" | "start") => void
         {STEPS.map((_, index) => (
           <span
             key={index}
-            className={`h-1 flex-1 rounded-full ${index <= step ? "bg-stone-900" : "bg-stone-200"}`}
+            className={`h-1 flex-1 rounded-full ${index <= step ? "bg-ink" : "bg-stone-200"}`}
           />
         ))}
       </div>
@@ -47,7 +49,7 @@ function Onboarding({ onFinish }: { onFinish: (action: "skip" | "start") => void
         <p className="text-sm font-medium text-stone-500">
           {step + 1} of {STEPS.length}
         </p>
-        <h1 className="text-3xl font-bold tracking-tight">{current.title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">{current.title}</h1>
         <p className="text-lg text-stone-600">{current.body}</p>
       </div>
       <div className="flex flex-col gap-3">
@@ -71,12 +73,9 @@ function Onboarding({ onFinish }: { onFinish: (action: "skip" | "start") => void
   );
 }
 
-function planMeta(plan: MyPlan) {
-  const bits = [plan.place, plan.inCount === 1 ? "1 in" : `${plan.inCount} in`].filter(
-    (bit): bit is string => !!bit,
-  );
-  if (plan.role === "host") bits.push("Hosting");
-  else bits.push(plan.hostName);
+function whoLine(plan: MyPlan) {
+  const bits = [plan.inCount === 1 ? "1 in" : `${plan.inCount} in`];
+  bits.push(plan.role === "host" ? "Hosting" : plan.hostName);
   if (plan.rsvp === "maybe") bits.push("Maybe");
   if (plan.episodeReady) bits.push("Recap ready");
   return bits.join(" · ");
@@ -85,9 +84,11 @@ function planMeta(plan: MyPlan) {
 function PlanCard({ plan }: { plan: MyPlan }) {
   return (
     <Link href={`/p/${plan.slug}`} className="card flex flex-col gap-1 active:bg-stone-100">
-      <span className="text-lg font-semibold">{plan.activity}</span>
+      {plan.status === "happening" && <StatusPill status="happening" />}
+      <span className="font-display text-3xl font-bold leading-tight">{plan.activity}</span>
       <span className="text-stone-600">{formatRange(new Date(plan.startsAt), new Date(plan.endsAt))}</span>
-      <span className="text-sm text-stone-500">{planMeta(plan)}</span>
+      {plan.place && <span className="text-stone-600">{plan.place}</span>}
+      <span className="text-sm text-stone-500">{whoLine(plan)}</span>
     </Link>
   );
 }
@@ -154,7 +155,7 @@ export function HostHome({
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Your plans</h1>
+            <h1 className="font-display text-3xl font-bold tracking-tight">Your plans</h1>
             {!hasPlans && (
               <p className="text-lg text-stone-600">Nothing coming up. Make one and drop the link in the group chat.</p>
             )}
@@ -180,8 +181,9 @@ export function HostHome({
                 Reports
               </Link>
             )}
+            <PrivacyLink />
             <SignOutButton />
-            {isHost && <DeleteAccountButton />}
+            <DeleteAccountButton />
           </div>
         </>
       )}

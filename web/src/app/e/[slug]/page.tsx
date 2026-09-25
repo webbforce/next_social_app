@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BrandLink } from "@/components/brand";
+import { PrivacyLink } from "@/components/privacy-link";
 import { ReportControl } from "@/app/report/report-control";
 import { StartPlanCta } from "@/app/p/[slug]/episode/start-plan-cta";
 import { getCurrentUser } from "@/lib/auth";
@@ -13,8 +14,8 @@ export async function generateMetadata(props: PageProps<"/e/[slug]">): Promise<M
   if (!episode) return { title: "Episode not found" };
   return {
     title: `Up for ${episode.activity}`,
-    description: "A recap made with Upfor.",
-    openGraph: { title: `Up for ${episode.activity}`, description: "A recap made with Upfor." },
+    description: "A recap made with upFor.",
+    openGraph: { title: `Up for ${episode.activity}`, description: "A recap made with upFor." },
   };
 }
 
@@ -61,6 +62,7 @@ export default async function PublicEpisodePage(props: PageProps<"/e/[slug]">) {
           label="Report this plan"
         />
       )}
+      <PrivacyLink />
     </main>
   );
 }

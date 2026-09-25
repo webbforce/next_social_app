@@ -49,7 +49,7 @@ export function FreeForm({
               if (isFree) save(next);
             }}
             className={`h-10 rounded-full border px-4 text-sm font-medium ${
-              intent === tag ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"
+              intent === tag ? "border-ink bg-ink text-paper" : "border-stone-300 bg-white"
             }`}
           >
             {FREE_INTENT_LABEL[tag]}

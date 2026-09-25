@@ -178,7 +178,13 @@ export function RsvpPanel({
                 onClick={() => choose(o.value)}
                 disabled={pending}
                 aria-pressed={selected}
-                className={selected ? "btn-primary px-2" : "btn-secondary px-2"}
+                className={
+                  selected && o.value === "in"
+                    ? "btn bg-up px-2 text-ink"
+                    : selected
+                      ? "btn-primary px-2"
+                      : "btn-secondary px-2"
+                }
               >
                 {o.label}
               </button>

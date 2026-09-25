@@ -48,7 +48,7 @@ function Chip({
       onClick={onClick}
       aria-pressed={selected}
       className={`h-10 rounded-full border px-4 text-sm font-medium ${
-        selected ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white"
+        selected ? "border-ink bg-ink text-paper" : "border-stone-300 bg-white"
       }`}
     >
       {children}

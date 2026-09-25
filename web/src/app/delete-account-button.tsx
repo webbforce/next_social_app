@@ -14,7 +14,7 @@ export function DeleteAccountButton() {
       onClick={() => {
         if (
           !confirm(
-            "Delete your account? Your name and photo come off plans now, and upcoming plans you host are cancelled. Photos you uploaded are erased within 30 days.",
+            "Delete your account? Your name comes off plans now, and upcoming plans you host are cancelled. Recaps that include you are taken down and rebuilt without you. Photos you uploaded, and a phone number on this account, are erased within 30 days.",
           )
         ) {
           return;

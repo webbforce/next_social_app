@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const alt = "An Upfor episode";
+export const alt = "An upFor episode";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -21,11 +21,11 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           flexDirection: "column",
           justifyContent: "center",
           padding: 72,
-          background: "#0c0a09",
-          color: "#fafaf9",
+          background: "#0B0B0B",
+          color: "#FAFAF8",
         }}
       >
-        <div style={{ fontSize: 32, letterSpacing: 4, color: "#a8a29e" }}>UPFOR</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: "#C8FF3D" }}>upFor</div>
         <div style={{ fontSize: 72, fontWeight: 800, marginTop: 24 }}>{`Up for ${activity}`}</div>
       </div>
     ),

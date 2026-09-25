@@ -44,7 +44,7 @@ export function TrackPicker({
             onClick={() => pick(track.id)}
             className={`h-10 rounded-full border px-4 text-sm font-medium ${
               selected === track.id
-                ? "border-stone-900 bg-stone-900 text-white"
+                ? "border-ink bg-ink text-paper"
                 : "border-stone-300 bg-white"
             }`}
           >

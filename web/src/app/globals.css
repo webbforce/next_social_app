@@ -2,6 +2,10 @@
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-sora);
+  --color-ink: #0b0b0b;
+  --color-paper: #fafaf8;
+  --color-up: #c8ff3d;
 }
 
 @utility btn {
@@ -9,15 +13,15 @@
 }
 
 @utility btn-primary {
-  @apply btn bg-stone-900 text-white active:bg-stone-700;
+  @apply btn bg-ink text-paper active:bg-[#242424];
 }
 
 @utility btn-secondary {
-  @apply btn border border-stone-300 bg-white text-stone-900 active:bg-stone-100;
+  @apply btn border border-stone-300 bg-white text-ink active:bg-stone-100;
 }
 
 @utility input {
-  @apply h-12 w-full min-w-0 max-w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none focus:border-stone-900;
+  @apply h-12 w-full min-w-0 max-w-full rounded-2xl border border-stone-300 bg-white px-4 text-base outline-none focus:border-ink;
 }
 
 input[type="date"],

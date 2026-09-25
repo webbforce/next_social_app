@@ -12,7 +12,7 @@ export function BrandLink() {
   return (
     <Link href="/" className="flex items-center gap-2 self-start">
       <BrandMark size={28} />
-      <span className="text-sm font-semibold tracking-wide">Upfor</span>
+      <span className="font-display text-lg font-bold tracking-tight">upFor</span>
     </Link>
   );
 }

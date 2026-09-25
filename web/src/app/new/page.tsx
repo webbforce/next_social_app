@@ -47,7 +47,7 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
           <SignOutButton />
         </div>
       </div>
-      <h1 className="text-3xl font-bold tracking-tight">What are you up for?</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">What are you up for?</h1>
       <PlanForm initialTag={initialTag} source={source} />
       {!profile.photo_path && <ProfilePhotoButton />}
       <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">

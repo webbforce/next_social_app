@@ -40,12 +40,12 @@ export function SharePanel({
   }
 
   return (
-    <section className={`card flex flex-col gap-3 ${highlight ? "border-stone-900" : ""}`}>
+    <section className={`card flex flex-col gap-3 ${highlight ? "border-ink" : ""}`}>
       <h2 className="text-lg font-semibold">
         {highlight ? "Your plan is live. Send it to the group chat." : "Share the plan"}
       </h2>
       {pin && (
-        <p className="text-sm text-stone-600">The message has the Upfor link, and a pin that opens in Maps.</p>
+        <p className="text-sm text-stone-600">The message has the upFor link, and a pin that opens in Maps.</p>
       )}
       <div className="grid grid-cols-2 gap-2">
         <a

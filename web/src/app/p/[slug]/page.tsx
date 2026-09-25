@@ -10,7 +10,9 @@ import { getPlanBySlug, getPlanEpisode, getPlanMoments, getPlanUpdates, planHead
 import { MakeEpisodeButton } from "./episode/make-button";
 import { StartPlanCta } from "./episode/start-plan-cta";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteAccountButton } from "@/app/delete-account-button";
 import { ReportControl } from "@/app/report/report-control";
+import { PrivacyLink } from "@/components/privacy-link";
 import { MomentsPanel } from "./moments-panel";
 import { OpenTracker } from "./open-tracker";
 import { PlanLive } from "./plan-live";
@@ -117,6 +119,9 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
         hasSession={!!user}
         label="Report this plan"
       />
+
+      <PrivacyLink />
+      {user && !plan.is_host && <DeleteAccountButton />}
 
       {!plan.is_host && (
         <StartPlanCta

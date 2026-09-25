@@ -1,3 +1,4 @@
+import { getCurrentUser } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
 import type { PlaceHit } from "@/lib/place";
 
@@ -12,7 +13,23 @@ type NominatimRow = {
 };
 
 const cache = new Map<string, { at: number; results: PlaceHit[] }>();
+const searches = new Map<string, { start: number; count: number }>();
 let lastRequestAt = 0;
+
+const SEARCH_WINDOW_MS = 10 * 60 * 1000;
+const SEARCH_LIMIT = 30;
+
+function withinSearchLimit(userId: string) {
+  const now = Date.now();
+  const slot = searches.get(userId);
+  if (!slot || now - slot.start >= SEARCH_WINDOW_MS) {
+    searches.set(userId, { start: now, count: 1 });
+    return true;
+  }
+  if (slot.count >= SEARCH_LIMIT) return false;
+  slot.count += 1;
+  return true;
+}
 
 function shortName(row: NominatimRow) {
   const named = row.name?.trim();
@@ -55,7 +72,7 @@ async function nominatim(query: string, country: boolean): Promise<NominatimRow[
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": `Upfor/1.0 (${siteUrl()})`,
+      "User-Agent": `upFor/1.0 (${siteUrl()})`,
     },
     cache: "no-store",
   });
@@ -79,8 +96,16 @@ function toHits(rows: NominatimRow[], query: string): PlaceHit[] {
 }
 
 export async function GET(request: Request) {
+  const user = await getCurrentUser();
+  if (!user || user.isAnonymous) {
+    return Response.json({ results: [], error: "Sign in to search for a place." }, { status: 401 });
+  }
+
   const query = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   if (query.length < 2 || query.length > 80) return Response.json({ results: [] });
+  if (!withinSearchLimit(user.id)) {
+    return Response.json({ results: [], error: "Too many searches. Type the place instead." }, { status: 429 });
+  }
 
   const key = query.toLocaleLowerCase();
   const hit = cache.get(key);

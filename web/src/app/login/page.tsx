@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, safeNextPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { BrandLink } from "@/components/brand";
+import { PrivacyLink } from "@/components/privacy-link";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -35,6 +36,7 @@ export default async function LoginPage(props: PageProps<"/login">) {
         signedInAsHost={!!user && !user.isAnonymous}
         guestFirstName={profile?.first_name ?? ""}
       />
+      <PrivacyLink />
     </main>
   );
 }

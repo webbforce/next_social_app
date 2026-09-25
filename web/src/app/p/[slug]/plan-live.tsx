@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { ReportControl } from "@/app/report/report-control";
 import { PlacePin } from "@/components/place-pin";
+import { StatusPill } from "@/components/status-pill";
 import { pinFromUrl } from "@/lib/place";
-import { planHeadline, type PlanStatus, type PlanUpdate, type PlanView } from "@/lib/plan-view";
+import { planHeadline, type PlanUpdate, type PlanView } from "@/lib/plan-view";
 import { formatRange, formatTime } from "@/lib/time";
 import { refreshPlanSnapshot } from "./actions";
 import { LeavePlanButton } from "./leave-plan";
@@ -13,13 +14,6 @@ import { HostTools, RemoveButton } from "./host-tools";
 import { RsvpPanel } from "./rsvp-panel";
 import { SharePanel } from "./share-panel";
 import { UpdateForm } from "./update-form";
-
-const STATUS_LABEL: Record<PlanStatus, string | null> = {
-  open: null,
-  happening: "Happening now",
-  ended: "Ended",
-  cancelled: "Cancelled",
-};
 
 const POLL_MS = 4000;
 
@@ -75,7 +69,6 @@ export function PlanLive({
   const maybe = plan.participants.filter((p) => p.rsvp === "maybe");
   const reclaimableGuests = plan.reclaimable_guests ?? [];
   const canReclaim = !plan.my_rsvp && needsProfile && reclaimableGuests.length > 0;
-  const statusLabel = STATUS_LABEL[plan.status];
   const headline = planHeadline(plan);
   const pin = plan.place_text ? pinFromUrl(plan.place_url) : null;
 
@@ -84,13 +77,14 @@ export function PlanLive({
       <header className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Avatar id={plan.host.id} name={plan.host.first_name} src={plan.host.photo_url} size="lg" />
-          <p className="text-stone-600">
-            <span className="font-semibold text-stone-900">{plan.host.first_name}</span>{" "}
+          <p className="min-w-0 flex-1 text-stone-600">
+            <span className="font-semibold text-ink">{plan.host.first_name}</span>{" "}
             {plan.status === "ended" ? "was up for" : "is up for"}
           </p>
+          <StatusPill status={plan.status} />
         </div>
         <h1
-          className={`text-4xl leading-tight font-bold tracking-tight ${plan.status === "cancelled" ? "line-through decoration-2" : ""}`}
+          className={`font-display text-4xl leading-tight font-bold tracking-tight ${plan.status === "cancelled" ? "line-through decoration-2" : ""}`}
         >
           {plan.activity}
         </h1>
@@ -109,15 +103,6 @@ export function PlanLive({
             </>
           )}
         </div>
-        {statusLabel && (
-          <p
-            className={`w-fit rounded-full px-3 py-1 text-sm font-medium ${
-              plan.status === "happening" ? "bg-lime-200 text-lime-900" : "bg-stone-200 text-stone-700"
-            }`}
-          >
-            {statusLabel}
-          </p>
-        )}
       </header>
 
       {plan.is_host && isLive && (

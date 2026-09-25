@@ -134,7 +134,7 @@ export function inviteMessage(
   pin: { name: string; lat: number; lng: number } | null,
   userAgent: string,
 ) {
-  const lines = [headline, `Open in Upfor: ${planUrl}`];
+  const lines = [headline, `Open in upFor: ${planUrl}`];
   if (pin) lines.push(`${pin.name}: ${nativeMapsUrl(pin.lat, pin.lng, pin.name, userAgent)}`);
   return lines.join("\n");
 }
