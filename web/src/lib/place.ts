@@ -118,3 +118,23 @@ export function googleMapsUrl(lat: number, lng: number) {
 export function pinShareText(name: string, lat: number, lng: number) {
   return `${name}\n${osmPinUrl(lat, lng)}`;
 }
+
+function prefersAppleMaps(userAgent: string) {
+  return /iPad|iPhone|iPod|Macintosh/.test(userAgent);
+}
+
+// The invite carries one maps link, for the phone that sends it: Apple Maps on Apple devices, Google Maps elsewhere.
+export function nativeMapsUrl(lat: number, lng: number, name: string, userAgent: string) {
+  return prefersAppleMaps(userAgent) ? appleMapsUrl(lat, lng, name) : googleMapsUrl(lat, lng);
+}
+
+export function inviteMessage(
+  headline: string,
+  planUrl: string,
+  pin: { name: string; lat: number; lng: number } | null,
+  userAgent: string,
+) {
+  const lines = [headline, `Open in Upfor: ${planUrl}`];
+  if (pin) lines.push(`${pin.name}: ${nativeMapsUrl(pin.lat, pin.lng, pin.name, userAgent)}`);
+  return lines.join("\n");
+}
