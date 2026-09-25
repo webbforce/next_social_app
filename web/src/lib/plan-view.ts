@@ -3,6 +3,35 @@ import { whenPhrase } from "@/lib/time";
 export type Rsvp = "in" | "maybe" | "out";
 export type PlanStatus = "open" | "happening" | "ended" | "cancelled";
 
+export type MyPlan = {
+  id: string;
+  slug: string;
+  activity: string;
+  place: string | null;
+  startsAt: string;
+  endsAt: string;
+  status: PlanStatus;
+  role: "host" | "guest";
+  rsvp: "in" | "maybe" | null;
+  hostName: string;
+  inCount: number;
+  episodeReady: boolean;
+};
+
+export function planStatus(
+  startsAt: string,
+  endsAt: string,
+  cancelledAt: string | null,
+  now = Date.now(),
+): PlanStatus {
+  if (cancelledAt) return "cancelled";
+  const start = new Date(startsAt).getTime();
+  const end = new Date(endsAt).getTime();
+  if (now < start) return "open";
+  if (now < end) return "happening";
+  return "ended";
+}
+
 export type Person = {
   id: string;
   first_name: string;

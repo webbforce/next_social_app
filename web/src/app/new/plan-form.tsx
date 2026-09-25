@@ -1,8 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { PlaceField } from "@/components/place-field";
 import { DateTimeFields } from "@/components/date-time-fields";
 import { ACTIVITIES, FREE_TEXT_HOURS, type ActivityTag } from "@/lib/activities";
+import type { PlaceDraft } from "@/lib/place";
 import { fromDateAndTime, toDateInputValue } from "@/lib/time";
 import { createPlan, type CreatePlanState } from "./actions";
 
@@ -71,7 +73,7 @@ export function PlanForm({
   const [pickedDate, setPickedDate] = useState(tomorrowDate);
   const [pickedTime, setPickedTime] = useState(nextFullHour);
   const [hours, setHours] = useState<number | null>(null);
-  const [place, setPlace] = useState("");
+  const [place, setPlace] = useState<PlaceDraft>({ text: "", lat: null, lng: null });
   const [localError, setLocalError] = useState<string | null>(null);
 
   const selected = ACTIVITIES.find((a) => a.tag === tag);
@@ -92,7 +94,9 @@ export function PlanForm({
     formData.set("activity_tag", tag ?? "");
     formData.set("starts_at", start.toISOString());
     formData.set("ends_at", new Date(start.getTime() + duration * 3_600_000).toISOString());
-    formData.set("place", place.trim());
+    formData.set("place", place.text.trim());
+    formData.set("place_lat", place.lat == null ? "" : String(place.lat));
+    formData.set("place_lng", place.lng == null ? "" : String(place.lng));
     formData.set("source", source);
     dispatch(formData);
   }
@@ -175,16 +179,7 @@ export function PlanForm({
         </label>
       </fieldset>
 
-      <label className="flex flex-col gap-3">
-        <span className="text-sm font-medium">Where (optional)</span>
-        <input
-          className="input"
-          placeholder="Café de Jaren, or paste a maps link"
-          maxLength={500}
-          value={place}
-          onChange={(e) => setPlace(e.target.value)}
-        />
-      </label>
+      <PlaceField value={place} onChange={setPlace} />
 
       {error && <p className="text-sm text-red-700">{error}</p>}
       <button className="btn-primary" disabled={pending || !activity}>

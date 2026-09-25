@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { pinShareText } from "@/lib/place";
 import { recordLinkShared } from "./actions";
 
 export function SharePanel({
@@ -8,16 +9,19 @@ export function SharePanel({
   slug,
   headline,
   highlight,
+  pin,
 }: {
   planId: string;
   slug: string;
   headline: string;
   highlight: boolean;
+  pin?: { name: string; lat: number; lng: number } | null;
 }) {
   const [copied, setCopied] = useState(false);
 
   const url = () => `${window.location.origin}/p/${slug}`;
-  const message = () => `${headline}\n${url()}`;
+  const message = () =>
+    [headline, url(), pin ? pinShareText(pin.name, pin.lat, pin.lng) : null].filter(Boolean).join("\n");
 
   async function copy() {
     await navigator.clipboard.writeText(url());
@@ -29,7 +33,10 @@ export function SharePanel({
   async function nativeShare() {
     if (!navigator.share) return copy();
     try {
-      await navigator.share({ text: headline, url: url() });
+      await navigator.share({
+        text: pin ? `${headline}\n${pinShareText(pin.name, pin.lat, pin.lng)}` : headline,
+        url: url(),
+      });
       void recordLinkShared(planId, "native");
     } catch {
       // Closing the share sheet rejects; nothing to do.
@@ -41,6 +48,7 @@ export function SharePanel({
       <h2 className="text-lg font-semibold">
         {highlight ? "Your plan is live. Send it to the group chat." : "Share the plan"}
       </h2>
+      {pin && <p className="text-sm text-stone-600">The message includes the pin, so it opens in another maps app.</p>}
       <div className="grid grid-cols-2 gap-2">
         <a
           className="btn-primary"

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { ReportControl } from "@/app/report/report-control";
+import { PlacePin } from "@/components/place-pin";
+import { pinFromUrl } from "@/lib/place";
 import { planHeadline, type PlanStatus, type PlanUpdate, type PlanView } from "@/lib/plan-view";
 import { formatRange, formatTime } from "@/lib/time";
 import { refreshPlanSnapshot } from "./actions";
@@ -75,6 +77,7 @@ export function PlanLive({
   const canReclaim = !plan.my_rsvp && needsProfile && reclaimableGuests.length > 0;
   const statusLabel = STATUS_LABEL[plan.status];
   const headline = planHeadline(plan);
+  const pin = plan.place_text ? pinFromUrl(plan.place_url) : null;
 
   return (
     <>
@@ -91,13 +94,19 @@ export function PlanLive({
         >
           {plan.activity}
         </h1>
-        <div className="flex flex-col gap-1 text-lg">
+        <div className="flex flex-col gap-3 text-lg">
           <p>{formatRange(new Date(plan.starts_at), new Date(plan.ends_at))}</p>
-          {plan.place_text && <p className="text-stone-600">{plan.place_text}</p>}
-          {plan.place_url && (
-            <a href={plan.place_url} target="_blank" rel="noopener noreferrer" className="text-stone-600 underline">
-              Open the location
-            </a>
+          {pin && plan.place_text ? (
+            <PlacePin name={plan.place_text} lat={pin.lat} lng={pin.lng} />
+          ) : (
+            <>
+              {plan.place_text && <p className="text-stone-600">{plan.place_text}</p>}
+              {plan.place_url && (
+                <a href={plan.place_url} target="_blank" rel="noopener noreferrer" className="text-stone-600 underline">
+                  Open the location
+                </a>
+              )}
+            </>
           )}
         </div>
         {statusLabel && (
@@ -112,7 +121,13 @@ export function PlanLive({
       </header>
 
       {plan.is_host && isLive && (
-        <SharePanel planId={plan.id} slug={slug} headline={headline} highlight={justCreated} />
+        <SharePanel
+          planId={plan.id}
+          slug={slug}
+          headline={headline}
+          highlight={justCreated}
+          pin={pin && plan.place_text ? { name: plan.place_text, lat: pin.lat, lng: pin.lng } : null}
+        />
       )}
 
       {plan.am_removed && <p className="card text-stone-600">The host removed you from this plan.</p>}

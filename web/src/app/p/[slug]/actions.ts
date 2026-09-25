@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { inAppBrowser, track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
 import { getPlanBySlug, getPlanUpdates, type Rsvp } from "@/lib/plan";
+import { parsePlaceFields } from "@/lib/place";
 import { createClient } from "@/lib/supabase/server";
 import { formatRange } from "@/lib/time";
 
@@ -144,8 +145,6 @@ export async function updatePlan(planId: string, slug: string, formData: FormDat
 
   const startsAt = new Date(String(formData.get("starts_at")));
   const endsAt = new Date(String(formData.get("ends_at")));
-  const place = String(formData.get("place") ?? "").trim();
-
   if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
     return { error: "Pick a start time." };
   }
@@ -157,13 +156,14 @@ export async function updatePlan(planId: string, slug: string, formData: FormDat
     return { error: "A plan can last up to 24 hours." };
   }
 
-  const isUrl = /^https?:\/\/\S+$/i.test(place);
-  if (isUrl ? place.length > 500 : place.length > 120) {
-    return { error: "That place is too long." };
-  }
+  const parsedPlace = parsePlaceFields(
+    String(formData.get("place") ?? ""),
+    String(formData.get("place_lat") ?? ""),
+    String(formData.get("place_lng") ?? ""),
+  );
+  if (!parsedPlace.ok) return { error: parsedPlace.error };
 
-  const placeText = place && !isUrl ? place : null;
-  const placeUrl = isUrl ? place : null;
+  const { placeText, placeUrl } = parsedPlace.place;
   const atMinute = (d: Date) => Math.floor(d.getTime() / 60_000);
   const timeChanged =
     atMinute(new Date(plan.starts_at)) !== atMinute(startsAt) ||

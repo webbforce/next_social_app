@@ -2,11 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { DateTimeFields } from "@/components/date-time-fields";
+import { PlaceField } from "@/components/place-field";
+import { pinFromUrl, type PlaceDraft } from "@/lib/place";
 import type { PlanView } from "@/lib/plan-view";
 import { fromDateAndTime, toDateInputValue, toTimeInputValue } from "@/lib/time";
 import { updatePlan } from "./actions";
 
 const DURATIONS = [1, 1.5, 2, 3, 4, 5, 6, 8];
+
+function draftFromPlan(plan: PlanView): PlaceDraft {
+  const pin = plan.place_text ? pinFromUrl(plan.place_url) : null;
+  if (pin) return { text: plan.place_text ?? "", lat: pin.lat, lng: pin.lng };
+  return { text: plan.place_url ?? plan.place_text ?? "", lat: null, lng: null };
+}
 
 function hoursBetween(startsAt: string, endsAt: string) {
   return Math.round(((Date.parse(endsAt) - Date.parse(startsAt)) / 3_600_000) * 2) / 2;
@@ -30,7 +38,7 @@ export function EditPlanForm({
   const [date, setDate] = useState(() => toDateInputValue(start));
   const [time, setTime] = useState(() => toTimeInputValue(start));
   const [hours, setHours] = useState(currentHours);
-  const [place, setPlace] = useState(plan.place_url ?? plan.place_text ?? "");
+  const [place, setPlace] = useState(() => draftFromPlan(plan));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -42,7 +50,9 @@ export function EditPlanForm({
     const data = new FormData();
     data.set("starts_at", start.toISOString());
     data.set("ends_at", new Date(start.getTime() + hours * 3_600_000).toISOString());
-    data.set("place", place.trim());
+    data.set("place", place.text.trim());
+    data.set("place_lat", place.lat == null ? "" : String(place.lat));
+    data.set("place_lng", place.lng == null ? "" : String(place.lng));
     startTransition(async () => {
       const result = await updatePlan(plan.id, slug, data);
       if (result.error) {
@@ -74,16 +84,7 @@ export function EditPlanForm({
           ))}
         </select>
       </label>
-      <label className="flex flex-col gap-2">
-        <span className="text-sm font-medium">Where (optional)</span>
-        <input
-          className="input"
-          placeholder="Café de Jaren, or paste a maps link"
-          maxLength={500}
-          value={place}
-          onChange={(e) => setPlace(e.target.value)}
-        />
-      </label>
+      <PlaceField value={place} onChange={setPlace} />
       {error && <p className="text-sm text-red-700">{error}</p>}
       <button className="btn-primary" disabled={pending}>
         {pending ? "Saving…" : "Save changes"}

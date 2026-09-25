@@ -13,7 +13,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 }
 
 // Only allow same-site relative redirects.
-export function safeNextPath(value: unknown, fallback = "/new") {
+export function safeNextPath(value: unknown, fallback = "/") {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
     ? value
     : fallback;

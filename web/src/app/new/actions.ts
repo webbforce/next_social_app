@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isActivityTag } from "@/lib/activities";
 import { track } from "@/lib/analytics";
 import { getCurrentUser } from "@/lib/auth";
+import { parsePlaceFields } from "@/lib/place";
 import { createClient } from "@/lib/supabase/server";
 
 export type CreatePlanState = { error: string | null };
@@ -18,7 +19,11 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
   const tag = formData.get("activity_tag");
   const startsAt = new Date(String(formData.get("starts_at")));
   const endsAt = new Date(String(formData.get("ends_at")));
-  const place = String(formData.get("place") ?? "").trim();
+  const parsedPlace = parsePlaceFields(
+    String(formData.get("place") ?? ""),
+    String(formData.get("place_lat") ?? ""),
+    String(formData.get("place_lng") ?? ""),
+  );
 
   if (activity.length < 1 || activity.length > 80) {
     return { error: "Say what you're up for in 80 characters or less." };
@@ -34,10 +39,7 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
     return { error: "A plan can last up to 24 hours." };
   }
 
-  const isUrl = /^https?:\/\/\S+$/i.test(place);
-  if (isUrl ? place.length > 500 : place.length > 120) {
-    return { error: "That place is too long." };
-  }
+  if (!parsedPlace.ok) return { error: parsedPlace.error };
 
   const source = formData.get("source") === "free_page" ? "free_page" : "web_create";
 
@@ -59,8 +61,8 @@ export async function createPlan(_prev: CreatePlanState, formData: FormData): Pr
       activity_tag: isActivityTag(tag) ? tag : null,
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      place_text: place && !isUrl ? place : null,
-      place_url: isUrl ? place : null,
+      place_text: parsedPlace.place.placeText,
+      place_url: parsedPlace.place.placeUrl,
       source,
     })
     .select("id, share_slug")
