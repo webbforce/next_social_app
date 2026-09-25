@@ -23,6 +23,7 @@ export function PlanLive({
   hasSession,
   needsProfile,
   justCreated,
+  leadPhotoUrl,
   initialPlan,
   initialUpdates,
 }: {
@@ -31,6 +32,7 @@ export function PlanLive({
   hasSession: boolean;
   needsProfile: boolean;
   justCreated: boolean;
+  leadPhotoUrl: string | null;
   initialPlan: PlanView;
   initialUpdates: PlanUpdate[] | null;
 }) {
@@ -75,6 +77,10 @@ export function PlanLive({
   return (
     <>
       <header className="flex flex-col gap-4">
+        {plan.status === "happening" && leadPhotoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={leadPhotoUrl} alt="" className="aspect-[3/2] w-full rounded-3xl object-cover" />
+        )}
         <div className="flex items-center gap-3">
           <Avatar id={plan.host.id} name={plan.host.first_name} src={plan.host.photo_url} size="lg" />
           <p className="min-w-0 flex-1 text-stone-600">

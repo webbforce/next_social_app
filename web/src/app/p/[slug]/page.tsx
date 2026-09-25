@@ -76,6 +76,7 @@ export default async function PlanPage(props: PageProps<"/p/[slug]">) {
         hasSession={!!user}
         needsProfile={needsProfile}
         justCreated={justCreated === "1"}
+        leadPhotoUrl={moments.at(-1)?.url || null}
         initialPlan={plan}
         initialUpdates={updates}
       />

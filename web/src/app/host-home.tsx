@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BrandLink } from "@/components/brand";
 import { StatusPill } from "@/components/status-pill";
+import { AccountSetup } from "@/app/account-setup";
 import { DeleteAccountButton } from "@/app/delete-account-button";
 import { PrivacyLink } from "@/components/privacy-link";
 import { SignOutButton } from "@/app/sign-out-button";
@@ -83,12 +84,21 @@ function whoLine(plan: MyPlan) {
 
 function PlanCard({ plan }: { plan: MyPlan }) {
   return (
-    <Link href={`/p/${plan.slug}`} className="card flex flex-col gap-1 active:bg-stone-100">
-      {plan.status === "happening" && <StatusPill status="happening" />}
-      <span className="font-display text-3xl font-bold leading-tight">{plan.activity}</span>
-      <span className="text-stone-600">{formatRange(new Date(plan.startsAt), new Date(plan.endsAt))}</span>
-      {plan.place && <span className="text-stone-600">{plan.place}</span>}
-      <span className="text-sm text-stone-500">{whoLine(plan)}</span>
+    <Link
+      href={`/p/${plan.slug}`}
+      className="flex flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white active:bg-stone-100"
+    >
+      {plan.coverUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={plan.coverUrl} alt="" className="aspect-[3/2] w-full object-cover" />
+      )}
+      <span className="flex flex-col gap-1 p-5">
+        {plan.status === "happening" && <StatusPill status="happening" />}
+        <span className="font-display text-3xl font-bold leading-tight">{plan.activity}</span>
+        <span className="text-stone-600">{formatRange(new Date(plan.startsAt), new Date(plan.endsAt))}</span>
+        {plan.place && <span className="text-stone-600">{plan.place}</span>}
+        <span className="text-sm text-stone-500">{whoLine(plan)}</span>
+      </span>
     </Link>
   );
 }
@@ -122,19 +132,26 @@ export function HostHome({
   isHost,
   plans,
   offerOnboarding,
+  needsProfile = false,
+  campuses = [],
+  firstName = "",
 }: {
   userId: string;
   isHost: boolean;
   plans: MyPlan[];
   offerOnboarding: boolean;
+  needsProfile?: boolean;
+  campuses?: { id: string; name: string }[];
+  firstName?: string;
 }) {
   const router = useRouter();
-  const [started, setStarted] = useState<boolean | null>(offerOnboarding ? null : true);
+  const [profileReady, setProfileReady] = useState(!needsProfile);
+  const [started, setStarted] = useState<boolean | null>(needsProfile ? false : offerOnboarding ? null : true);
 
   useEffect(() => {
-    if (!offerOnboarding) return;
+    if (!offerOnboarding || needsProfile) return;
     setStarted(window.localStorage.getItem(storageKey(userId)) === "1");
-  }, [offerOnboarding, userId]);
+  }, [offerOnboarding, needsProfile, userId]);
 
   function finish(action: "skip" | "start") {
     window.localStorage.setItem(storageKey(userId), "1");
@@ -150,7 +167,9 @@ export function HostHome({
   return (
     <>
       <BrandLink />
-      {started !== true ? (
+      {!profileReady ? (
+        <AccountSetup campuses={campuses} firstName={firstName} onDone={() => setProfileReady(true)} />
+      ) : started !== true ? (
         started === null ? <div className="h-48" /> : <Onboarding onFinish={finish} />
       ) : (
         <>

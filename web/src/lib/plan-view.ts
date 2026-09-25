@@ -16,6 +16,7 @@ export type MyPlan = {
   hostName: string;
   inCount: number;
   episodeReady: boolean;
+  coverUrl: string | null;
 };
 
 export function planStatus(

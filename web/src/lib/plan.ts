@@ -82,6 +82,7 @@ function toMyPlan(row: PlanBits, userId: string, rsvp: "in" | "maybe" | null): M
     hostName: one(row.profiles)?.first_name ?? "Someone",
     inCount: peopleIn(row.plan_participants),
     episodeReady: one(row.episodes)?.status === "ready",
+    coverUrl: null,
   };
 }
 
@@ -110,7 +111,38 @@ export async function getMyPlans(userId: string): Promise<MyPlan[]> {
     if (!plan || byId.has(plan.id)) continue;
     byId.set(plan.id, toMyPlan(plan, userId, row.rsvp));
   }
-  return [...byId.values()];
+  return attachCoverPhotos([...byId.values()]);
+}
+
+async function attachCoverPhotos(plans: MyPlan[]): Promise<MyPlan[]> {
+  if (!plans.length) return plans;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("moments")
+    .select("plan_id, storage_path, created_at")
+    .in(
+      "plan_id",
+      plans.map((plan) => plan.id),
+    )
+    .is("removed_at", null)
+    .order("created_at", { ascending: false });
+  if (error || !data?.length) {
+    if (error) console.error("plan covers:", error.message);
+    return plans;
+  }
+
+  const pathByPlan = new Map<string, string>();
+  for (const row of data) {
+    if (!pathByPlan.has(row.plan_id)) pathByPlan.set(row.plan_id, row.storage_path);
+  }
+  const { data: signed } = await supabase.storage.from("moments").createSignedUrls([...pathByPlan.values()], 3600);
+  const urls = new Map(
+    (signed ?? []).filter((row) => row.path && row.signedUrl).map((row) => [row.path, row.signedUrl]),
+  );
+  return plans.map((plan) => {
+    const path = pathByPlan.get(plan.id);
+    return { ...plan, coverUrl: path ? (urls.get(path) ?? null) : null };
+  });
 }
 
 export const getPlanMoments = cache(async (planId: string): Promise<MomentView[]> => {
