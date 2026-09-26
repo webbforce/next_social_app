@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SaveAccount } from "@/app/save-account";
 
 export function Splash() {
   return (
@@ -11,12 +12,7 @@ export function Splash() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/wordmark.png" alt="upFor" className="h-auto w-[78%]" />
         <p className="text-lg text-white">Make it happen.</p>
-        <Link href="/new" className="btn w-full bg-up text-ink active:bg-[#b6ef22]">
-          Make a plan
-        </Link>
-        <Link href="/login" className="text-sm text-white/80 underline">
-          I already have an account
-        </Link>
+        <SaveAccount next="/" appearance="splash" allowPhone />
         <p className="text-center text-xs text-white/80">
           By continuing, you agree to our{" "}
           <Link href="/privacy" className="underline">

@@ -41,6 +41,7 @@ export function PlanLive({
 }) {
   const [plan, setPlan] = useState(initialPlan);
   const [updates, setUpdates] = useState(initialUpdates);
+  const [savingAccount, setSavingAccount] = useState(false);
 
   useEffect(() => {
     setPlan(initialPlan);
@@ -114,14 +115,6 @@ export function PlanLive({
         </div>
       </header>
 
-      {showSaveAccount && (
-        <SaveAccount
-          next={`/p/${slug}`}
-          title="Save this plan"
-          detail="So you can come back to it. Apple, Google, or an email code. We don't ask for a phone number."
-        />
-      )}
-
       {plan.is_host && isLive && (
         <SharePanel
           planId={plan.id}
@@ -129,6 +122,19 @@ export function PlanLive({
           headline={headline}
           highlight={justCreated}
           pin={pin && plan.place_text ? { name: plan.place_text, lat: pin.lat, lng: pin.lng } : null}
+        />
+      )}
+
+      {showSaveAccount && !savingAccount && (
+        <button type="button" className="text-sm text-stone-600 underline" onClick={() => setSavingAccount(true)}>
+          Save this plan to open it again later
+        </button>
+      )}
+      {showSaveAccount && savingAccount && (
+        <SaveAccount
+          next={`/p/${slug}`}
+          title="Save this plan"
+          detail="Optional. Apple, Google, or an email code keeps it when you switch phones."
         />
       )}
 

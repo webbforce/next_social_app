@@ -15,10 +15,9 @@ export default function PrivacyPage() {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">Account</h2>
         <p className="text-stone-700">
-          A host can make a plan before saving an account. Saving it uses Apple, Google, or an email
-          code, so the plan is still there on the next visit. We don&apos;t ask for a phone number to
-          start. An older account may still sign in with a phone code. Guests join from the plan
-          link and are not asked for an account.
+          A host starts with Apple, Google, or an email code. We don&apos;t ask for a phone number
+          to start. An older account may still sign in with a phone code. After that, a short guide
+          leads into the first plan. Guests join from the plan link and are not asked for an account.
         </p>
       </section>
 

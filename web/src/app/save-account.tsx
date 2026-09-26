@@ -25,14 +25,17 @@ export function SaveAccount({
   title = "Save your account",
   detail = "Apple, Google, or an email code. No phone number.",
   allowPhone = false,
+  appearance = "plain",
 }: {
   next: string;
   title?: string;
   detail?: string;
   allowPhone?: boolean;
+  appearance?: "plain" | "splash";
 }) {
   const router = useRouter();
   const [step, setStep] = useState<"choose" | "code">("choose");
+  const [emailOpen, setEmailOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [upgrading, setUpgrading] = useState(false);
@@ -116,11 +119,13 @@ export function SaveAccount({
     });
   }
 
+  const splash = appearance === "splash";
+
   if (step === "code") {
     return (
-      <form onSubmit={verifyEmail} className="flex flex-col gap-4">
-        <h2 className="font-display text-2xl font-bold tracking-tight">Enter the code</h2>
-        <p className="text-stone-600">We emailed a 6-digit code to {email}.</p>
+      <form onSubmit={verifyEmail} className="flex w-full flex-col gap-4">
+        <h2 className={`font-display text-2xl font-bold tracking-tight ${splash ? "text-white" : ""}`}>Enter the code</h2>
+        <p className={splash ? "text-white/80" : "text-stone-600"}>We emailed a 6-digit code to {email}.</p>
         <input
           className="input text-center text-2xl tracking-[0.4em]"
           inputMode="numeric"
@@ -133,13 +138,13 @@ export function SaveAccount({
           autoFocus
           aria-label="Code"
         />
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        <button className="btn-primary" disabled={pending || code.length !== 6}>
+        {error && <p className={`text-sm ${splash ? "text-red-200" : "text-red-700"}`}>{error}</p>}
+        <button className={splash ? "btn w-full bg-white text-ink" : "btn-primary"} disabled={pending || code.length !== 6}>
           {pending ? "Checking…" : "Continue"}
         </button>
         <button
           type="button"
-          className="text-sm text-stone-600 underline"
+          className={`text-sm underline ${splash ? "text-white/80" : "text-stone-600"}`}
           onClick={() => {
             setCode("");
             setError(null);
@@ -153,38 +158,61 @@ export function SaveAccount({
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
-        <p className="text-stone-600">{detail}</p>
-      </div>
-      <button type="button" className="btn-primary" disabled={pending} onClick={() => useProvider("apple")}>
+    <section className="flex w-full flex-col gap-4">
+      {!splash && (
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
+          <p className="text-stone-600">{detail}</p>
+        </div>
+      )}
+      <button
+        type="button"
+        className={splash ? "btn w-full bg-white text-ink active:bg-stone-100" : "btn-primary"}
+        disabled={pending}
+        onClick={() => useProvider("apple")}
+      >
         Continue with Apple
       </button>
-      <button type="button" className="btn-secondary" disabled={pending} onClick={() => useProvider("google")}>
+      <button
+        type="button"
+        className={splash ? "btn w-full border border-white/50 bg-transparent text-white active:bg-white/10" : "btn-secondary"}
+        disabled={pending}
+        onClick={() => useProvider("google")}
+      >
         Continue with Google
       </button>
-      <form onSubmit={sendEmail} className="flex flex-col gap-3">
-        <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium">Email a code</span>
-          <input
-            className="input"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            placeholder="you@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        <button className="btn-secondary" disabled={pending}>
-          {pending ? "Sending…" : "Email me a code"}
+      {splash && !emailOpen ? (
+        <button type="button" className="text-sm text-white/80 underline" onClick={() => setEmailOpen(true)}>
+          Email a code instead
         </button>
-      </form>
+      ) : (
+        <form onSubmit={sendEmail} className="flex flex-col gap-3">
+          <label className="flex flex-col gap-2">
+            <span className={`text-sm font-medium ${splash ? "text-white" : ""}`}>Email a code</span>
+            <input
+              className="input"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="you@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <button className="btn-secondary w-full" disabled={pending}>
+            {pending ? "Sending…" : "Email me a code"}
+          </button>
+        </form>
+      )}
+      {error && step === "choose" && (
+        <p className={`text-sm ${splash ? "text-center text-red-200" : "text-red-700"}`}>{error}</p>
+      )}
       {allowPhone && (
-        <Link href={`/login?method=phone&next=${encodeURIComponent(next)}`} className="text-center text-sm text-stone-500 underline">
+        <Link
+          href={`/login?method=phone&next=${encodeURIComponent(next)}`}
+          className={`text-center text-sm underline ${splash ? "text-white/70" : "text-stone-500"}`}
+        >
           I already signed in with a phone number
         </Link>
       )}

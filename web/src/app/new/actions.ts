@@ -13,35 +13,15 @@ const HOUR_MS = 60 * 60 * 1000;
 
 export async function createPlan(_prev: CreatePlanState, formData: FormData): Promise<CreatePlanState> {
   const supabase = await createClient();
-  let user = await getCurrentUser();
-  if (!user) {
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error || !data.user) return { error: "Couldn't start the plan. Try again." };
-    user = { id: data.user.id, isAnonymous: true };
-  }
+  const user = await getCurrentUser();
+  if (!user || user.isAnonymous) return { error: "Create an account first." };
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("is_18_plus_confirmed")
     .eq("id", user.id)
     .maybeSingle();
-  if (!profile?.is_18_plus_confirmed) {
-    const firstName = String(formData.get("first_name") ?? "").trim();
-    const confirmed = formData.get("confirmed_18") === "on";
-    if (firstName.length < 1 || firstName.length > 40) return { error: "Add your first name." };
-    if (!confirmed) return { error: "Confirm you're 18 or older." };
-    const { error } = profile
-      ? await supabase
-          .from("profiles")
-          .update({ first_name: firstName, is_18_plus_confirmed: true })
-          .eq("id", user.id)
-      : await supabase.from("profiles").insert({
-          id: user.id,
-          first_name: firstName,
-          is_18_plus_confirmed: true,
-        });
-    if (error) return { error: "Couldn't save your name. Try again." };
-  }
+  if (!profile?.is_18_plus_confirmed) return { error: "Confirm you're 18 or older first." };
 
   const activity = String(formData.get("activity") ?? "").trim();
   const tag = formData.get("activity_tag");

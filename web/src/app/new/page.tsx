@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { isActivityTag } from "@/lib/activities";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +22,7 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
     ? await supabase.from("profiles").select("is_18_plus_confirmed, photo_path").eq("id", user.id).maybeSingle()
     : { data: null };
   const savedHost = !!user && !user.isAnonymous && !!profile?.is_18_plus_confirmed;
+  if (!savedHost) redirect("/");
 
   const initialTag = isActivityTag(tagValue) ? tagValue : null;
   const source = fromValue === "free" ? "free_page" : "web_create";
@@ -29,21 +31,17 @@ export default async function NewPlanPage(props: PageProps<"/new">) {
     <main className="flex flex-1 flex-col gap-6 py-10">
       <div className="flex items-center justify-between">
         <BrandLink />
-        {savedHost && (
-          <div className="flex items-center gap-4">
-            <DeleteAccountButton />
-            <SignOutButton />
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <DeleteAccountButton />
+          <SignOutButton />
+        </div>
       </div>
       <h1 className="font-display text-3xl font-bold tracking-tight">What are you up for?</h1>
-      <PlanForm initialTag={initialTag} source={source} askName={!profile?.is_18_plus_confirmed} />
-      {savedHost && !profile?.photo_path && <ProfilePhotoButton />}
-      {savedHost && (
-        <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">
-          Or say you&apos;re free tonight
-        </Link>
-      )}
+      <PlanForm initialTag={initialTag} source={source} />
+      {!profile?.photo_path && <ProfilePhotoButton />}
+      <Link href="/free" className="text-center text-sm font-medium text-stone-600 underline">
+        Or say you&apos;re free tonight
+      </Link>
     </main>
   );
 }
