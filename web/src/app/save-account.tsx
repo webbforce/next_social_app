@@ -5,15 +5,27 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { recordSignupCompleted, recordSignupStarted } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/client";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 type Provider = "apple" | "google";
 
+const PROVIDER_OFF = "That sign-in isn't turned on yet. Use email for now.";
+
 function providerProblem(message: string) {
   const text = message.toLowerCase();
-  if (text.includes("not enabled") || text.includes("unsupported provider")) {
-    return "That sign-in isn't turned on yet. Use email for now.";
+  if (text.includes("not enabled") || text.includes("unsupported provider") || text.includes("validation_failed")) {
+    return PROVIDER_OFF;
   }
   return message;
+}
+
+async function providerEnabled(provider: Provider) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+    headers: { apikey: supabaseAnonKey },
+  });
+  if (!response.ok) return false;
+  const settings = (await response.json()) as { external?: Record<string, boolean> };
+  return settings.external?.[provider] === true;
 }
 
 function validEmail(value: string) {
@@ -49,16 +61,26 @@ export function SaveAccount({
   function useProvider(provider: Provider) {
     setError(null);
     startTransition(async () => {
+      if (!(await providerEnabled(provider))) {
+        setEmailOpen(true);
+        setError(PROVIDER_OFF);
+        return;
+      }
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const options = { redirectTo: redirectTo() };
-      const { error } = user?.is_anonymous
+      const options = { redirectTo: redirectTo(), skipBrowserRedirect: true };
+      const { data, error } = user?.is_anonymous
         ? await supabase.auth.linkIdentity({ provider, options })
         : await supabase.auth.signInWithOAuth({ provider, options });
-      if (error) setError(providerProblem(error.message));
-      else void recordSignupStarted("direct");
+      if (error || !data?.url) {
+        setEmailOpen(true);
+        setError(providerProblem(error?.message ?? PROVIDER_OFF));
+        return;
+      }
+      void recordSignupStarted("direct");
+      window.location.assign(data.url);
     });
   }
 
