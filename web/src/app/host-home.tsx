@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BrandLink } from "@/components/brand";
 import { StatusPill } from "@/components/status-pill";
 import { AccountSetup } from "@/app/account-setup";
+import { SaveAccount } from "@/app/save-account";
 import { DeleteAccountButton } from "@/app/delete-account-button";
 import { PrivacyLink } from "@/components/privacy-link";
 import { SignOutButton } from "@/app/sign-out-button";
@@ -135,6 +136,7 @@ export function HostHome({
   needsProfile = false,
   campuses = [],
   firstName = "",
+  unsavedAccount = false,
 }: {
   userId: string;
   isHost: boolean;
@@ -143,6 +145,7 @@ export function HostHome({
   needsProfile?: boolean;
   campuses?: { id: string; name: string }[];
   firstName?: string;
+  unsavedAccount?: boolean;
 }) {
   const router = useRouter();
   const [profileReady, setProfileReady] = useState(!needsProfile);
@@ -173,6 +176,13 @@ export function HostHome({
         started === null ? <div className="h-48" /> : <Onboarding onFinish={finish} />
       ) : (
         <>
+          {unsavedAccount && (
+            <SaveAccount
+              next="/"
+              title="Save your account"
+              detail="Your plans stay on this phone until you do. Apple, Google, or an email code."
+            />
+          )}
           <div className="flex flex-col gap-2">
             <h1 className="font-display text-3xl font-bold tracking-tight">Your plans</h1>
             {!hasPlans && (

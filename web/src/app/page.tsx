@@ -41,6 +41,7 @@ export default async function Home() {
         needsProfile={needsProfile}
         campuses={campuses ?? []}
         firstName={profile?.first_name ?? ""}
+        unsavedAccount={!!user.isAnonymous}
       />
     </main>
   );

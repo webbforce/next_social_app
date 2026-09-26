@@ -13,10 +13,12 @@ export default function PrivacyPage() {
       </p>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">Phone number</h2>
+        <h2 className="text-lg font-semibold">Account</h2>
         <p className="text-stone-700">
-          Hosts sign in with a code sent to their phone. The code is sent by the sign-in provider.
-          Guests join from the plan link and are not asked for a number.
+          A host can make a plan before saving an account. Saving it uses Apple, Google, or an email
+          code, so the plan is still there on the next visit. We don&apos;t ask for a phone number to
+          start. An older account may still sign in with a phone code. Guests join from the plan
+          link and are not asked for an account.
         </p>
       </section>
 
@@ -49,8 +51,9 @@ export default function PrivacyPage() {
         <h2 className="text-lg font-semibold">How long it stays</h2>
         <p className="text-stone-700">
           Delete account and your name comes off plans now. Upcoming plans you host are cancelled.
-          Photos you uploaded, your profile photo, and a host phone number are erased within 30
-          days, including the phone record used to sign in. I&apos;m free expires at 04:00, or when
+          Photos you uploaded, your profile photo, and the sign-in used to save the account are
+          erased within 30 days. That includes an email, an Apple or Google sign-in, or an older
+          phone number. I&apos;m free expires at 04:00, or when
           you clear it.
         </p>
         <p className="text-stone-700">

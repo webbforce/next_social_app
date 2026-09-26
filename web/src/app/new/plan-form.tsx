@@ -59,9 +59,11 @@ function Chip({
 export function PlanForm({
   initialTag = null,
   source = "web_create",
+  askName = false,
 }: {
   initialTag?: ActivityTag | null;
   source?: "web_create" | "free_page";
+  askName?: boolean;
 }) {
   const [state, dispatch, pending] = useActionState<CreatePlanState, FormData>(createPlan, {
     error: null,
@@ -74,6 +76,8 @@ export function PlanForm({
   const [pickedTime, setPickedTime] = useState(nextFullHour);
   const [hours, setHours] = useState<number | null>(null);
   const [place, setPlace] = useState<PlaceDraft>({ text: "", lat: null, lng: null });
+  const [firstName, setFirstName] = useState("");
+  const [confirmed18, setConfirmed18] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const selected = ACTIVITIES.find((a) => a.tag === tag);
@@ -83,6 +87,8 @@ export function PlanForm({
 
   function submit(formData: FormData) {
     const start = startFor(startMode, todayTime, pickedDate, pickedTime);
+    if (askName && firstName.trim().length < 1) return setLocalError("Add your first name.");
+    if (askName && !confirmed18) return setLocalError("Confirm you're 18 or older.");
     if (!activity) return setLocalError("Pick an activity or type your own.");
     if (!start || Number.isNaN(start.getTime())) return setLocalError("Pick a start time.");
     if (startMode !== "now" && start.getTime() < Date.now() - 5 * 60 * 1000) {
@@ -98,6 +104,10 @@ export function PlanForm({
     formData.set("place_lat", place.lat == null ? "" : String(place.lat));
     formData.set("place_lng", place.lng == null ? "" : String(place.lng));
     formData.set("source", source);
+    if (askName) {
+      formData.set("first_name", firstName.trim());
+      if (confirmed18) formData.set("confirmed_18", "on");
+    }
     dispatch(formData);
   }
 
@@ -180,6 +190,31 @@ export function PlanForm({
       </fieldset>
 
       <PlaceField value={place} onChange={setPlace} />
+
+      {askName && (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-3 text-sm font-medium">Your name</legend>
+          <input
+            className="input"
+            autoComplete="given-name"
+            maxLength={40}
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-5"
+              checked={confirmed18}
+              onChange={(e) => setConfirmed18(e.target.checked)}
+              required
+            />
+            <span>I&apos;m 18 or older</span>
+          </label>
+        </fieldset>
+      )}
 
       {error && <p className="text-sm text-red-700">{error}</p>}
       <button className="btn-primary" disabled={pending || !activity}>

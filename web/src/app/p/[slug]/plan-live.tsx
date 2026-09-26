@@ -12,6 +12,7 @@ import { refreshPlanSnapshot } from "./actions";
 import { LeavePlanButton } from "./leave-plan";
 import { HostTools, RemoveButton } from "./host-tools";
 import { RsvpPanel } from "./rsvp-panel";
+import { SaveAccount } from "@/app/save-account";
 import { SharePanel } from "./share-panel";
 import { UpdateForm } from "./update-form";
 
@@ -23,6 +24,7 @@ export function PlanLive({
   hasSession,
   needsProfile,
   justCreated,
+  showSaveAccount,
   leadPhotoUrl,
   initialPlan,
   initialUpdates,
@@ -32,6 +34,7 @@ export function PlanLive({
   hasSession: boolean;
   needsProfile: boolean;
   justCreated: boolean;
+  showSaveAccount: boolean;
   leadPhotoUrl: string | null;
   initialPlan: PlanView;
   initialUpdates: PlanUpdate[] | null;
@@ -110,6 +113,14 @@ export function PlanLive({
           )}
         </div>
       </header>
+
+      {showSaveAccount && (
+        <SaveAccount
+          next={`/p/${slug}`}
+          title="Save this plan"
+          detail="So you can come back to it. Apple, Google, or an email code. We don't ask for a phone number."
+        />
+      )}
 
       {plan.is_host && isLive && (
         <SharePanel

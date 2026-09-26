@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type CurrentUser = { id: string; isAnonymous: boolean };
 
-// Guests are anonymous Supabase users; hosts have verified a phone number.
+// Guests are anonymous Supabase users. A saved host has signed in with Apple, Google, email, or an older phone account.
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
